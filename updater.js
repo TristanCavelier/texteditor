@@ -46,6 +46,6 @@
   ac.addEventListener("cached", function () { c.info("application cached successfuly"); });
   ac.addEventListener('updateready', function () { ac.swapCache(); c.info("application cache ready to update"); }, false);
   ac.addEventListener("obsolete", function () { c.warn("application is no longer cached!"); });
-  ac.addEventListener("error", function () { c.error("application cannot be cached"); });
+  ac.addEventListener("error", function (e) { c.error("application cannot be cached"); c.error(e); });
 
 }(this));
