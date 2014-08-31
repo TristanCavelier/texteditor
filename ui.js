@@ -180,13 +180,14 @@
       }
     },
     lint: function (cm) {
-      // Why two setTimeout? because the first never works... =)
+      // Why two setTimeout? because the first sometimes doesn't works... =)
       function tryToEnableLint() {
         try {
           cm.setOption("lint", false);
           cm.setOption("lint", true);
         } catch (ignore) {}
       }
+      root.setTimeout(tryToEnableLint);
       root.setTimeout(tryToEnableLint);
     },
     "remove-trailing-spaces": function (cm) {
