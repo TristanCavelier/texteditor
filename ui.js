@@ -181,11 +181,10 @@
     },
     "eval doc": "Eval entire document as javascript /!\\ POTENTIALY DANGEROUS",
     eval: function (cm) {
-      var s = root.document.createElement("script");
-      s.textContent = cm.getValue();
-      root.document.body.appendChild(s);
+      var s = cm.getValue();
       root.setTimeout(function () {
-        s.remove();
+        /*jslint evil: true */
+        root.eval(s);
       });
     },
     lint: function (cm) {
