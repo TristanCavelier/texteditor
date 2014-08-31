@@ -179,6 +179,15 @@
         cm.setOption("tabSize", i);
       }
     },
+    "eval doc": "Eval entire document as javascript /!\\ POTENTIALY DANGEROUS",
+    eval: function (cm) {
+      var s = root.document.createElement("script");
+      s.textContent = cm.getValue();
+      root.document.body.appendChild(s);
+      root.setTimeout(function () {
+        s.remove();
+      });
+    },
     lint: function (cm) {
       // Why two setTimeout? because the first sometimes doesn't works... =)
       function tryToEnableLint() {
