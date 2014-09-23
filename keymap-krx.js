@@ -313,7 +313,7 @@
   CodeMirror.keyMap.krx["Alt-Up"] = moveLineUp;
   CodeMirror.keyMap.krx["Alt-Down"] = moveLineDown;
   CodeMirror.keyMap.krx["Alt-Space"] = "goCharRight"; // TODO change it
-  CodeMirror.keyMap.krx["Alt-Backspace"] = "delWordBefore";
+  CodeMirror.keyMap.krx["Alt-Backspace"] = "delCharAfter"; // (NO OTHER CHOICE on chromebooks)
   CodeMirror.keyMap.krx["Alt-Enter"] = function (cm) {
     removeSpacesAtCursor(cm);
     cm.execCommand("newlineAndIndent");
@@ -345,6 +345,7 @@
   // CodeMirror.keyMap.krx["Ctrl-X"] = "delCharAfter";
   // CodeMirror.keyMap.krx["Ctrl-Y"] = undefined;
   // CodeMirror.keyMap.krx["Ctrl-Z"] = undefined;
+  // CodeMirror.keyMap.krx["Ctrl-Backspace"] = undefined; // (browser delWordBefore)
 
   CodeMirror.keyMap.krx["Shift-Tab"] = "insertSoftTab"; // TODO ?
   CodeMirror.keyMap.krx["Shift-F3"] = "findPrev";
@@ -388,6 +389,7 @@
   CodeMirror.keyMap.krx["Shift-Alt-."] = "goDocEnd";
   CodeMirror.keyMap.krx["Shift-Alt-<"] = "goDocStart"; // TODO doesn't work
   CodeMirror.keyMap.krx["Shift-Alt->"] = "goDocEnd"; // TODO doesn't work
+  CodeMirror.keyMap.krx["Shift-Alt-Backspace"] = "delWordAfter";
 
   // CodeMirror.keyMap.krx["Shift-Ctrl-A"] = undefined;
   // CodeMirror.keyMap.krx["Shift-Ctrl-B"] = undefined;
