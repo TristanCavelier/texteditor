@@ -37,7 +37,6 @@
   // dependencies:
   // - document
   // - location
-  // - JSON
   // - Promise
   // - Blob
   // - FileReader
@@ -116,19 +115,16 @@
     load: function (cm, args) {
       /*jslint unparam: true */
       args = args.slice(0, 1); // don't use args[1] unless the given parameters allows space character
-      if (!args[1]) { args[1] = root.prompt("Change description:", root.JSON.stringify(description)); }
+      if (!args[1]) { args[1] = root.prompt("Change description:", description); }
       if (!args[1]) { return root.alert("Empty description, aborting."); }
       try {
-        var tmp;
-        tmp = root.JSON.parse(args[1]);
-        root.mixinManager.parse(tmp);
-        args[1] = tmp;
+        root.mixinManager.parse(args[1]);
       } catch (e) {
         return root.alert(e);
       }
       if (!args[2]) { args[2] = root.prompt("Open:", url); }
       if (!args[2]) { return root.alert("Empty url, aborting."); }
-      root.location.href = root.location.href.split("#").slice(0, 1).concat([encodeURIComponent(root.JSON.stringify(args[1])), encodeURIComponent(args[2])]).join("#");
+      root.location.href = root.location.href.split("#").slice(0, 1).concat([encodeURIComponent(args[1]), encodeURIComponent(args[2])]).join("#");
       root.location.reload();
     },
     "loadpath doc": "XXX",
@@ -137,7 +133,7 @@
       args = args.slice(0, 1); // don't use args[1] unless the given parameters allows space character
       if (!args[1]) { args[1] = root.prompt("Open:", url); }
       if (!args[1]) { return root.alert("Empty url, aborting."); }
-      root.location.href = root.location.href.split("#").slice(0, 1).concat([encodeURIComponent(root.JSON.stringify(description)), encodeURIComponent(args[1])]).join("#");
+      root.location.href = root.location.href.split("#").slice(0, 1).concat([encodeURIComponent(description), encodeURIComponent(args[1])]).join("#");
       root.location.reload();
     },
     save: function (cm) {
@@ -295,7 +291,7 @@
     root.setTimeout(function () {
       try {
         var hashes = root.location.href.split('#').slice(1);
-        description = root.JSON.parse(decodeURIComponent(hashes[0]));
+        description = decodeURIComponent(hashes[0]);
         storage = root.mixinManager.parse(description);
         url = decodeURIComponent(hashes[1]);
         var basename, dirname, mimetype;
