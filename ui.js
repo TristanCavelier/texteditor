@@ -49,10 +49,6 @@
   // - mixinManager
   // - base64
 
-  if (root.JSLINT) {
-    root.JSHINT = root.JSLINT;
-  }
-
   function randomChoose(array) {
     return array[parseInt(Math.random() * array.length, 10)];
   }
