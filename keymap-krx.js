@@ -341,7 +341,7 @@
   // CodeMirror.keyMap.krx["Ctrl-T"] = undefined; // (browser new tab)
   // CodeMirror.keyMap.krx["Ctrl-U"] = "undo";
   // CodeMirror.keyMap.krx["Ctrl-V"] = undefined;
-  // CodeMirror.keyMap.krx["Ctrl-W"] = undefined;
+  // CodeMirror.keyMap.krx["Ctrl-W"] = undefined; // (browser close window NO OTHER CHOICE)
   // CodeMirror.keyMap.krx["Ctrl-X"] = "delCharAfter";
   // CodeMirror.keyMap.krx["Ctrl-Y"] = undefined;
   // CodeMirror.keyMap.krx["Ctrl-Z"] = undefined;
