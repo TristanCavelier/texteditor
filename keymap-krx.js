@@ -336,7 +336,7 @@
   // CodeMirror.keyMap.krx["Ctrl-O"] = undefined;
   CodeMirror.keyMap.krx["Ctrl-P"] = doNothing;
   // CodeMirror.keyMap.krx["Ctrl-Q"] = undefined;
-  CodeMirror.keyMap.krx["Ctrl-R"] = "redo";
+  CodeMirror.keyMap.krx["Ctrl-R"] = "redo"; // (browser reload page)
   CodeMirror.keyMap.krx["Ctrl-S"] = "save";
   // CodeMirror.keyMap.krx["Ctrl-T"] = undefined; // (browser new tab)
   // CodeMirror.keyMap.krx["Ctrl-U"] = "undo";
@@ -407,7 +407,7 @@
   // CodeMirror.keyMap.krx["Shift-Ctrl-O"] = undefined;
   // CodeMirror.keyMap.krx["Shift-Ctrl-P"] = undefined;
   // CodeMirror.keyMap.krx["Shift-Ctrl-Q"] = undefined;
-  CodeMirror.keyMap.krx["Shift-Ctrl-R"] = doNothing;
+  CodeMirror.keyMap.krx["Shift-Ctrl-R"] = doNothing; // (browser reload page without cache)
   // CodeMirror.keyMap.krx["Shift-Ctrl-S"] = undefined;
   // CodeMirror.keyMap.krx["Shift-Ctrl-T"] = undefined; // (browser open recently closed tab)
   // CodeMirror.keyMap.krx["Shift-Ctrl-U"] = "undo";
