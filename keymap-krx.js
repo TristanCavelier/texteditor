@@ -32,68 +32,6 @@
 
   */
 
-//   ////////////////////////////////////////
-//
-//   function FIFO() {
-//     this.begin = 0;
-//     this.end = 0;
-//     this.length = 0;
-//   }
-//
-//   FIFO.prototype.maxLength = undefined;
-//
-//   FIFO.prototype.push = function () {
-//     var i;
-//     for (i = 0; i < arguments.length; i += 1) {
-//       this[this.end] = this[arguments[i]];
-//       this.end += 1;
-//       this.length += 1;
-//     }
-//     if (typeof this.maxLength === "number" && this.length > this.maxLength) {
-//       for (i = this.length - this.maxLength; i > 0; i -= 1) {
-//         this.shift();
-//       }
-//     }
-//     return this.length;
-//   };
-//
-//   FIFO.prototype.shift = function () {
-//     if (this.begin >= this.end) { return; }
-//     this.length -= 1;
-//     var val = this[this.begin];
-//     delete this[this.begin];
-//     this.begin += 1;
-//     return val;
-//   };
-//
-//   ////////////////////////////////////////
-//
-//   var undoList = new FIFO();
-//   undoList.maxLength = 50;
-//   var historyList = new FIFO();
-//   historyList.maxLength = 10;
-//
-//   ////////////////////////////////////////
-//
-//   var funs = {
-//     "undefined": function () { return; },
-//     "left-char": function (cm) {
-//       cm.extendSelection(cm.findPosH(cm.getCursor(), -1, "char", true));
-//     },
-//     "right-char": function (cm) {
-//       cm.extendSelection(cm.findPosH(cm.getCursor(), 1, "char", true));
-//     },
-//     "next-line": function (cm) {
-//       cm.extendSelection(cm.findPosV(cm.getCursor(), 1, "line", cm.doc.sel.goalColumn));
-//     },
-//     "previous-line": function (cm) {
-//       cm.extendSelection(cm.findPosV(cm.getCursor(), -1, "line", cm.doc.sel.goalColumn));
-//     },
-//     "undo": function (cm) {
-//       cm.undo();
-//     }
-//   };
-
   /*jslint vars: true */
 
   var CodeMirror = root.CodeMirror;
