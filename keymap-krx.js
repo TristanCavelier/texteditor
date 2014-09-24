@@ -3,6 +3,9 @@
   "use strict";
 
   /*
+   A stateless keymap that mix some emacs and vim shortcuts
+   mostly thank to the Alt button.
+
    Version: 0.1.0b
 
    Copyright (c) 2014 Tristan Cavelier <t.cavelier@free.fr>
@@ -76,10 +79,11 @@
 //     cm.setCursor(end);
 //   }
 
-  // Right: from the cursor, match the next on the document, until the end of document
-  // After: from the cursor, match the next on the line, until the end of line
-  // Left: from the cursor, match the previous on the document, until the beginning of document
-  // Before: from the cursor, match the previous on the line, until the beginning of line
+  // Vocabulary:
+  // - Right: from the cursor, match the next on the document, until the end of document
+  // - After: from the cursor, match the next on the line, until the end of line. If cursor is on eol, then match also on the next line
+  // - Left: from the cursor, match the previous on the document, until the beginning of document
+  // - Before: from the cursor, match the previous on the line, until the beginning of line. If cursor is on bol, then match also on the previous line
 
   function operateUntilWordAfter(cm, op) {
     var start = cm.getCursor(), end = cm.findPosH(start, 1, "word");
