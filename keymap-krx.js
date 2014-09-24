@@ -299,7 +299,7 @@
   };
   CodeMirror.keyMap.krx["Shift-Alt-D"] = "deleteLine";
   // CodeMirror.keyMap.krx["Shift-Alt-E"] = "transposeChars";
-  // CodeMirror.keyMap.krx["Shift-Alt-F"] = undefined;
+  CodeMirror.keyMap.krx["Shift-Alt-F"] = doNothing; // (firefox [File] shortcut)
   CodeMirror.keyMap.krx["Shift-Alt-G"] = doNothing;
   // CodeMirror.keyMap.krx["Shift-Alt-H"] = "goCharLeft";
   CodeMirror.keyMap.krx["Shift-Alt-I"] = "goLineStartSmart";
