@@ -236,7 +236,7 @@
   CodeMirror.keyMap.krx["Alt-P"] = doNothing; // TODO searchPrevious
   // CodeMirror.keyMap.krx["Alt-Q"] = undefined;
   // CodeMirror.keyMap.krx["Alt-R"] = undefined;
-  CodeMirror.keyMap.krx["Alt-S"] = "delCharBefore";
+  CodeMirror.keyMap.krx["Alt-S"] = "delWordBefore";
   CodeMirror.keyMap.krx["Alt-T"] = "transposeChars";
   CodeMirror.keyMap.krx["Alt-U"] = "undo";
   CodeMirror.keyMap.krx["Alt-V"] = setOrUnsetMark;
