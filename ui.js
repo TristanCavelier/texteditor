@@ -250,7 +250,7 @@
       extraKeys: {
         // "Alt-X": function (cm) {
         // "Alt-F12": function (cm) {
-        "Alt-R": function (cm) {
+        "Alt-P": function (cm) {
           // XXX allow the use of space character (like in bash interpreter)
           var text = root.prompt("Command (type `help` to get a list of commands)"), args;
           if (text) {
