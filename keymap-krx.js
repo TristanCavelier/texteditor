@@ -235,7 +235,7 @@
   };
   CodeMirror.keyMap.krx["Alt-P"] = doNothing; // TODO searchPrevious
   // CodeMirror.keyMap.krx["Alt-Q"] = undefined;
-  // CodeMirror.keyMap.krx["Alt-R"] = undefined;
+  CodeMirror.keyMap.krx["Alt-R"] = "replace";
   CodeMirror.keyMap.krx["Alt-S"] = "delWordBefore";
   CodeMirror.keyMap.krx["Alt-T"] = "transposeChars";
   CodeMirror.keyMap.krx["Alt-U"] = "undo";
@@ -315,7 +315,7 @@
   };
   // CodeMirror.keyMap.krx["Shift-Alt-P"] = undefined;
   // CodeMirror.keyMap.krx["Shift-Alt-Q"] = undefined;
-  // CodeMirror.keyMap.krx["Shift-Alt-R"] = "redo";
+  CodeMirror.keyMap.krx["Shift-Alt-R"] = "replaceAll";
   CodeMirror.keyMap.krx["Shift-Alt-S"] = "delCharAfter";
   CodeMirror.keyMap.krx["Shift-Alt-T"] = doNothing; // TODO transposeWords (firefox [Tools] shortcut)
   CodeMirror.keyMap.krx["Shift-Alt-U"] = "redo";
