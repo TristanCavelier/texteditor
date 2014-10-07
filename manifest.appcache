@@ -19,7 +19,6 @@ NETWORK:
 
 CACHE:
 index.html
-updater.js
 
 //rawgit.com/TristanCavelier/mixins/master/src/mixin-manager.js
 //rawgit.com/TristanCavelier/mixins/master/src/ajax.js
