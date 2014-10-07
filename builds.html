@@ -146,10 +146,10 @@ window.onload = function () {
   document.body.appendChild(csstextarea);
   Promise.all(css_urls.map(function (url) { return getAsText(url); })).then(function (css_texts) {
     csstextarea.value = css_texts.map(function (text, i) {
-      return '////////////////////////////////////////////////////////////////////////////////\n' +
-        '// BEGIN ' + css_urls[i] + '\n' +
+      return '/******************************************************************************/\n' +
+        '/* BEGIN ' + css_urls[i] + '*/\n' +
         text + '\n' +
-        '// END ' + css_urls[i] + '\n';
+        '/* END ' + css_urls[i] + '*/\n';
     }).join('\n');
   }).then(null, alert);
 };
