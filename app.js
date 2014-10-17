@@ -1,61 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN updater.js
-/*jslint indent: 2 */
-(function (root) {
-  "use strict";
-
-  /*
-   Copyright (c) 2014 Tristan Cavelier <t.cavelier@free.fr>
-
-   This program is free software. It comes without any warranty, to
-   the extent permitted by applicable law. You can redistribute it
-   and/or modify it under the terms of the Do What The Fuck You Want
-   To Public License, Version 2, as published by Sam Hocevar. See
-   below for more details.
-
-   ___________________________________________________________________
-  |                                                                   |
-  |           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE             |
-  |                   Version 2, December 2004                        |
-  |                                                                   |
-  |Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>                   |
-  |                                                                   |
-  |Everyone is permitted to copy and distribute verbatim or modified  |
-  |copies of this license document, and changing it is allowed as long|
-  |as the name is changed.                                            |
-  |                                                                   |
-  |           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE             |
-  |  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION  |
-  |                                                                   |
-  | 0. You just DO WHAT THE FUCK YOU WANT TO.                         |
-  |___________________________________________________________________|
-
-  */
-
-  /*jslint indent: 2 */
-
-  // dependencies:
-  // - applicationCache
-  // - console
-
-  var ac = root.applicationCache, c = root.console;
-
-  root.addEventListener('load', function () { ac.update(); }, false);
-  ac.addEventListener("checking", function () { c.info("application cache checking for update"); });
-  ac.addEventListener("noupdate", function () { c.info("application cache is up to date"); });
-  ac.addEventListener("downloading", function () { c.info("application cache downloading new content"); });
-  ac.addEventListener("progress", function () { c.info("application cache progressing"); });
-  ac.addEventListener("cached", function () { c.info("application cached successfuly"); });
-  ac.addEventListener('updateready', function () { ac.swapCache(); c.info("application cache ready to update"); }, false);
-  ac.addEventListener("obsolete", function () { c.warn("application is no longer cached!"); });
-  ac.addEventListener("error", function (e) { c.error("application cannot be cached"); c.error(e); });
-
-}(this));
-// END updater.js
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/TristanCavelier/mixins/master/src/mixin-manager.js
+// BEGIN //rawgit.com/TristanCavelier/mixins/master/src/mixin-manager.js
 /*jslint indent: 2 */
 (function factory(root) {
   "use strict";
@@ -462,11 +406,10 @@
   });
 
 }(this));
-// END http://rawgit.com/TristanCavelier/mixins/master/src/mixin-manager.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/mixins/master/src/mixin-manager.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/TristanCavelier/mixins/master/src/ajax.js
+// BEGIN //rawgit.com/TristanCavelier/mixins/master/src/ajax.js
 /*jslint indent: 2 */
 (function factory(root) {
   "use strict";
@@ -748,11 +691,10 @@
   });
 
 }(this));
-// END http://rawgit.com/TristanCavelier/mixins/master/src/ajax.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/mixins/master/src/ajax.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/TristanCavelier/mixins/master/src/webdav.js
+// BEGIN //rawgit.com/TristanCavelier/mixins/master/src/webdav.js
 /*jslint indent: 2 */
 (function factory(root) {
   "use strict";
@@ -940,11 +882,10 @@
   });
 
 }(this));
-// END http://rawgit.com/TristanCavelier/mixins/master/src/webdav.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/mixins/master/src/webdav.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/TristanCavelier/mixins/master/src/prefix-url.js
+// BEGIN //rawgit.com/TristanCavelier/mixins/master/src/prefix-url.js
 /*jslint indent: 2 */
 (function factory(root) {
   "use strict";
@@ -1070,11 +1011,10 @@
   });
 
 }(this));
-// END http://rawgit.com/TristanCavelier/mixins/master/src/prefix-url.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/mixins/master/src/prefix-url.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/TristanCavelier/mixins/master/src/base64.js
+// BEGIN //rawgit.com/TristanCavelier/mixins/master/src/base64.js
 /*jslint indent: 2 */
 (function factory(root) {
   "use strict";
@@ -1229,11 +1169,10 @@
   });
 
 }(this));
-// END http://rawgit.com/TristanCavelier/mixins/master/src/base64.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/mixins/master/src/base64.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/lib/codemirror.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/lib/codemirror.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -1332,21 +1271,20 @@
     registerEventHandlers(this);
     ensureGlobalHandlers();
 
-    var cm = this;
-    runInOp(this, function() {
-      cm.curOp.forceUpdate = true;
-      attachDoc(cm, doc);
+    startOperation(this);
+    this.curOp.forceUpdate = true;
+    attachDoc(this, doc);
 
-      if ((options.autofocus && !mobile) || activeElt() == display.input)
-        setTimeout(bind(onFocus, cm), 20);
-      else
-        onBlur(cm);
+    if ((options.autofocus && !mobile) || activeElt() == display.input)
+      setTimeout(bind(onFocus, this), 20);
+    else
+      onBlur(this);
 
-      for (var opt in optionHandlers) if (optionHandlers.hasOwnProperty(opt))
-        optionHandlers[opt](cm, options[opt], Init);
-      maybeUpdateLineNumberWidth(cm);
-      for (var i = 0; i < initHooks.length; ++i) initHooks[i](cm);
-    });
+    for (var opt in optionHandlers) if (optionHandlers.hasOwnProperty(opt))
+      optionHandlers[opt](this, options[opt], Init);
+    maybeUpdateLineNumberWidth(this);
+    for (var i = 0; i < initHooks.length; ++i) initHooks[i](this);
+    endOperation(this);
   }
 
   // DISPLAY CONSTRUCTOR
@@ -1959,9 +1897,10 @@
   // view, so that we don't interleave reading and writing to the DOM.
   function getDimensions(cm) {
     var d = cm.display, left = {}, width = {};
+    var gutterLeft = d.gutters.clientLeft;
     for (var n = d.gutters.firstChild, i = 0; n; n = n.nextSibling, ++i) {
-      left[cm.options.gutters[i]] = n.offsetLeft;
-      width[cm.options.gutters[i]] = n.offsetWidth;
+      left[cm.options.gutters[i]] = n.offsetLeft + n.clientLeft + gutterLeft;
+      width[cm.options.gutters[i]] = n.clientWidth;
     }
     return {fixedPos: compensateForHScroll(d),
             gutterTotalWidth: d.gutters.offsetWidth,
@@ -4956,7 +4895,7 @@
   // measured, the position of something may 'drift' during drawing).
   function scrollPosIntoView(cm, pos, end, margin) {
     if (margin == null) margin = 0;
-    for (;;) {
+    for (var limit = 0; limit < 5; limit++) {
       var changed = false, coords = cursorCoords(cm, pos);
       var endCoords = !end || end == pos ? coords : cursorCoords(cm, end);
       var scrollPos = calculateScrollPos(cm, Math.min(coords.left, endCoords.left),
@@ -5005,7 +4944,7 @@
     var screenleft = cm.curOp && cm.curOp.scrollLeft != null ? cm.curOp.scrollLeft : display.scroller.scrollLeft;
     var screenw = display.scroller.clientWidth - scrollerCutOff - display.gutters.offsetWidth;
     var tooWide = x2 - x1 > screenw;
-    if (tooWide) x2 = x1 + screen;
+    if (tooWide) x2 = x1 + screenw;
     if (x1 < 10)
       result.scrollLeft = 0;
     else if (x1 < screenleft)
@@ -5806,10 +5745,8 @@
   // load a mode. (Preferred mechanism is the require/define calls.)
   CodeMirror.defineMode = function(name, mode) {
     if (!CodeMirror.defaults.mode && name != "null") CodeMirror.defaults.mode = name;
-    if (arguments.length > 2) {
-      mode.dependencies = [];
-      for (var i = 2; i < arguments.length; ++i) mode.dependencies.push(arguments[i]);
-    }
+    if (arguments.length > 2)
+      mode.dependencies = Array.prototype.slice.call(arguments, 2);
     modes[name] = mode;
   };
 
@@ -6101,7 +6038,7 @@
   // are simply ignored.
   keyMap.pcDefault = {
     "Ctrl-A": "selectAll", "Ctrl-D": "deleteLine", "Ctrl-Z": "undo", "Shift-Ctrl-Z": "redo", "Ctrl-Y": "redo",
-    "Ctrl-Home": "goDocStart", "Ctrl-Up": "goDocStart", "Ctrl-End": "goDocEnd", "Ctrl-Down": "goDocEnd",
+    "Ctrl-Home": "goDocStart", "Ctrl-End": "goDocEnd", "Ctrl-Up": "goLineUp", "Ctrl-Down": "goLineDown",
     "Ctrl-Left": "goGroupLeft", "Ctrl-Right": "goGroupRight", "Alt-Left": "goLineStart", "Alt-Right": "goLineEnd",
     "Ctrl-Backspace": "delGroupBefore", "Ctrl-Delete": "delGroupAfter", "Ctrl-S": "save", "Ctrl-F": "find",
     "Ctrl-G": "findNext", "Shift-Ctrl-G": "findPrev", "Shift-Ctrl-F": "replace", "Shift-Ctrl-R": "replaceAll",
@@ -6116,7 +6053,7 @@
     "Ctrl-Alt-Backspace": "delGroupAfter", "Alt-Delete": "delGroupAfter", "Cmd-S": "save", "Cmd-F": "find",
     "Cmd-G": "findNext", "Shift-Cmd-G": "findPrev", "Cmd-Alt-F": "replace", "Shift-Cmd-Alt-F": "replaceAll",
     "Cmd-[": "indentLess", "Cmd-]": "indentMore", "Cmd-Backspace": "delWrappedLineLeft", "Cmd-Delete": "delWrappedLineRight",
-    "Cmd-U": "undoSelection", "Shift-Cmd-U": "redoSelection",
+    "Cmd-U": "undoSelection", "Shift-Cmd-U": "redoSelection", "Ctrl-Up": "goDocStart", "Ctrl-Down": "goDocEnd",
     fallthrough: ["basic", "emacsy"]
   };
   // Very basic readline/emacs-style bindings, which are standard on Mac.
@@ -9066,11 +9003,10 @@
 
   return CodeMirror;
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/lib/codemirror.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/lib/codemirror.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/css/css.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/css/css.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -9788,11 +9724,10 @@ CodeMirror.defineMode("css", function(config, parserConfig) {
   });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/css/css.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/css/css.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/javascript/javascript.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/javascript/javascript.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -10451,7 +10386,7 @@ CodeMirror.defineMode("javascript", function(config, parserConfig) {
       else return lexical.indented + (closing ? 0 : indentUnit);
     },
 
-    electricChars: ":{}",
+    electricInput: /^\s*(?:case .*?:|default:|\{|\})$/,
     blockCommentStart: jsonMode ? null : "/*",
     blockCommentEnd: jsonMode ? null : "*/",
     lineComment: jsonMode ? null : "//",
@@ -10477,11 +10412,10 @@ CodeMirror.defineMIME("text/typescript", { name: "javascript", typescript: true 
 CodeMirror.defineMIME("application/typescript", { name: "javascript", typescript: true });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/javascript/javascript.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/javascript/javascript.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/htmlmixed/htmlmixed.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/htmlmixed/htmlmixed.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -10603,11 +10537,10 @@ CodeMirror.defineMode("htmlmixed", function(config, parserConfig) {
 CodeMirror.defineMIME("text/html", "htmlmixed");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/htmlmixed/htmlmixed.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/htmlmixed/htmlmixed.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/xml/xml.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/xml/xml.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -10992,11 +10925,10 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   CodeMirror.defineMIME("text/html", {name: "xml", htmlMode: true});
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/xml/xml.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/xml/xml.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/python/python.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/python/python.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -11343,11 +11275,10 @@ if (!CodeMirror.mimeModes.hasOwnProperty("text/html"))
   });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/python/python.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/python/python.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/clike/clike.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/clike/clike.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -11799,11 +11730,10 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
   });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/clike/clike.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/clike/clike.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/markdown/markdown.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/markdown/markdown.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -12562,11 +12492,10 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
 CodeMirror.defineMIME("text/x-markdown", "markdown");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/markdown/markdown.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/markdown/markdown.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/php/php.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/php/php.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -12664,7 +12593,7 @@ CodeMirror.defineMIME("text/x-markdown", "markdown");
     "die echo empty exit eval include include_once isset list require require_once return " +
     "print unset __halt_compiler self static parent yield insteadof finally";
   var phpAtoms = "true false null TRUE FALSE NULL __CLASS__ __DIR__ __FILE__ __LINE__ __METHOD__ __FUNCTION__ __NAMESPACE__ __TRAIT__";
-  var phpBuiltin = "func_num_args func_get_arg func_get_args strlen strcmp strncmp strcasecmp strncasecmp each error_reporting define defined trigger_error user_error set_error_handler restore_error_handler get_declared_classes get_loaded_extensions extension_loaded get_extension_funcs debug_backtrace constant bin2hex hex2bin sleep usleep time mktime gmmktime strftime gmstrftime strtotime date gmdate getdate localtime checkdate flush wordwrap htmlspecialchars htmlentities html_entity_decode md5 md5_file crc32 getimagesize image_type_to_mime_type phpinfo phpversion phpcredits strnatcmp strnatcasecmp substr_count strspn strcspn strtok strtoupper strtolower strpos strrpos strrev hebrev hebrevc nl2br basename dirname pathinfo stripslashes stripcslashes strstr stristr strrchr str_shuffle str_word_count strcoll substr substr_replace quotemeta ucfirst ucwords strtr addslashes addcslashes rtrim str_replace str_repeat count_chars chunk_split trim ltrim strip_tags similar_text explode implode setlocale localeconv parse_str str_pad chop strchr sprintf printf vprintf vsprintf sscanf fscanf parse_url urlencode urldecode rawurlencode rawurldecode readlink linkinfo link unlink exec system escapeshellcmd escapeshellarg passthru shell_exec proc_open proc_close rand srand getrandmax mt_rand mt_srand mt_getrandmax base64_decode base64_encode abs ceil floor round is_finite is_nan is_infinite bindec hexdec octdec decbin decoct dechex base_convert number_format fmod ip2long long2ip getenv putenv getopt microtime gettimeofday getrusage uniqid quoted_printable_decode set_time_limit get_cfg_var magic_quotes_runtime set_magic_quotes_runtime get_magic_quotes_gpc get_magic_quotes_runtime import_request_variables error_log serialize unserialize memory_get_usage var_dump var_export debug_zval_dump print_r highlight_file show_source highlight_string ini_get ini_get_all ini_set ini_alter ini_restore get_include_path set_include_path restore_include_path setcookie header headers_sent connection_aborted connection_status ignore_user_abort parse_ini_file is_uploaded_file move_uploaded_file intval floatval doubleval strval gettype settype is_null is_resource is_bool is_long is_float is_int is_integer is_double is_real is_numeric is_string is_array is_object is_scalar ereg ereg_replace eregi eregi_replace split spliti join sql_regcase dl pclose popen readfile rewind rmdir umask fclose feof fgetc fgets fgetss fread fopen fpassthru ftruncate fstat fseek ftell fflush fwrite fputs mkdir rename copy tempnam tmpfile file file_get_contents stream_select stream_context_create stream_context_set_params stream_context_set_option stream_context_get_options stream_filter_prepend stream_filter_append fgetcsv flock get_meta_tags stream_set_write_buffer set_file_buffer set_socket_blocking stream_set_blocking socket_set_blocking stream_get_meta_data stream_register_wrapper stream_wrapper_register stream_set_timeout socket_set_timeout socket_get_status realpath fnmatch fsockopen pfsockopen pack unpack get_browser crypt opendir closedir chdir getcwd rewinddir readdir dir glob fileatime filectime filegroup fileinode filemtime fileowner fileperms filesize filetype file_exists is_writable is_writeable is_readable is_executable is_file is_dir is_link stat lstat chown touch clearstatcache mail ob_start ob_flush ob_clean ob_end_flush ob_end_clean ob_get_flush ob_get_clean ob_get_length ob_get_level ob_get_status ob_get_contents ob_implicit_flush ob_list_handlers ksort krsort natsort natcasesort asort arsort sort rsort usort uasort uksort shuffle array_walk count end prev next reset current key min max in_array array_search extract compact array_fill range array_multisort array_push array_pop array_shift array_unshift array_splice array_slice array_merge array_merge_recursive array_keys array_values array_count_values array_reverse array_reduce array_pad array_flip array_change_key_case array_rand array_unique array_intersect array_intersect_assoc array_diff array_diff_assoc array_sum array_filter array_map array_chunk array_key_exists pos sizeof key_exists assert assert_options version_compare ftok str_rot13 aggregate session_name session_module_name session_save_path session_id session_regenerate_id session_decode session_register session_unregister session_is_registered session_encode session_start session_destroy session_unset session_set_save_handler session_cache_limiter session_cache_expire session_set_cookie_params session_get_cookie_params session_write_close preg_match preg_match_all preg_replace preg_replace_callback preg_split preg_quote preg_grep overload ctype_alnum ctype_alpha ctype_cntrl ctype_digit ctype_lower ctype_graph ctype_print ctype_punct ctype_space ctype_upper ctype_xdigit virtual apache_request_headers apache_note apache_lookup_uri apache_child_terminate apache_setenv apache_response_headers apache_get_version getallheaders mysql_connect mysql_pconnect mysql_close mysql_select_db mysql_create_db mysql_drop_db mysql_query mysql_unbuffered_query mysql_db_query mysql_list_dbs mysql_list_tables mysql_list_fields mysql_list_processes mysql_error mysql_errno mysql_affected_rows mysql_insert_id mysql_result mysql_num_rows mysql_num_fields mysql_fetch_row mysql_fetch_array mysql_fetch_assoc mysql_fetch_object mysql_data_seek mysql_fetch_lengths mysql_fetch_field mysql_field_seek mysql_free_result mysql_field_name mysql_field_table mysql_field_len mysql_field_type mysql_field_flags mysql_escape_string mysql_real_escape_string mysql_stat mysql_thread_id mysql_client_encoding mysql_get_client_info mysql_get_host_info mysql_get_proto_info mysql_get_server_info mysql_info mysql mysql_fieldname mysql_fieldtable mysql_fieldlen mysql_fieldtype mysql_fieldflags mysql_selectdb mysql_createdb mysql_dropdb mysql_freeresult mysql_numfields mysql_numrows mysql_listdbs mysql_listtables mysql_listfields mysql_db_name mysql_dbname mysql_tablename mysql_table_name pg_connect pg_pconnect pg_close pg_connection_status pg_connection_busy pg_connection_reset pg_host pg_dbname pg_port pg_tty pg_options pg_ping pg_query pg_send_query pg_cancel_query pg_fetch_result pg_fetch_row pg_fetch_assoc pg_fetch_array pg_fetch_object pg_fetch_all pg_affected_rows pg_get_result pg_result_seek pg_result_status pg_free_result pg_last_oid pg_num_rows pg_num_fields pg_field_name pg_field_num pg_field_size pg_field_type pg_field_prtlen pg_field_is_null pg_get_notify pg_get_pid pg_result_error pg_last_error pg_last_notice pg_put_line pg_end_copy pg_copy_to pg_copy_from pg_trace pg_untrace pg_lo_create pg_lo_unlink pg_lo_open pg_lo_close pg_lo_read pg_lo_write pg_lo_read_all pg_lo_import pg_lo_export pg_lo_seek pg_lo_tell pg_escape_string pg_escape_bytea pg_unescape_bytea pg_client_encoding pg_set_client_encoding pg_meta_data pg_convert pg_insert pg_update pg_delete pg_select pg_exec pg_getlastoid pg_cmdtuples pg_errormessage pg_numrows pg_numfields pg_fieldname pg_fieldsize pg_fieldtype pg_fieldnum pg_fieldprtlen pg_fieldisnull pg_freeresult pg_result pg_loreadall pg_locreate pg_lounlink pg_loopen pg_loclose pg_loread pg_lowrite pg_loimport pg_loexport http_response_code get_declared_traits getimagesizefromstring socket_import_stream stream_set_chunk_size trait_exists header_register_callback class_uses session_status session_register_shutdown echo print global static exit array empty eval isset unset die include require include_once require_once json_decode json_encode json_last_error json_last_error_msg curl_close curl_copy_handle curl_errno curl_error curl_escape curl_exec curl_file_create curl_getinfo curl_init curl_multi_add_handle curl_multi_close curl_multi_exec curl_multi_getcontent curl_multi_info_read curl_multi_init curl_multi_remove_handle curl_multi_select curl_multi_setopt curl_multi_strerror curl_pause curl_reset curl_setopt_array curl_setopt curl_share_close curl_share_init curl_share_setopt curl_strerror curl_unescape curl_version mysqli_affected_rows mysqli_autocommit mysqli_change_user mysqli_character_set_name mysqli_close mysqli_commit mysqli_connect_errno mysqli_connect_error mysqli_connect mysqli_data_seek mysqli_debug mysqli_dump_debug_info mysqli_errno mysqli_error_list mysqli_error mysqli_fetch_all mysqli_fetch_array mysqli_fetch_assoc mysqli_fetch_field_direct mysqli_fetch_field mysqli_fetch_fields mysqli_fetch_lengths mysqli_fetch_object mysqli_fetch_row mysqli_field_count mysqli_field_seek mysqli_field_tell mysqli_free_result mysqli_get_charset mysqli_get_client_info mysqli_get_client_stats mysqli_get_client_version mysqli_get_connection_stats mysqli_get_host_info mysqli_get_proto_info mysqli_get_server_info mysqli_get_server_version mysqli_info mysqli_init mysqli_insert_id mysqli_kill mysqli_more_results mysqli_multi_query mysqli_next_result mysqli_num_fields mysqli_num_rows mysqli_options mysqli_ping mysqli_prepare mysqli_query mysqli_real_connect mysqli_real_escape_string mysqli_real_query mysqli_reap_async_query mysqli_refresh mysqli_rollback mysqli_select_db mysqli_set_charset mysqli_set_local_infile_default mysqli_set_local_infile_handler mysqli_sqlstate mysqli_ssl_set mysqli_stat mysqli_stmt_init mysqli_store_result mysqli_thread_id mysqli_thread_safe mysqli_use_result mysqli_warning_count";
+  var phpBuiltin = "func_num_args func_get_arg func_get_args strlen strcmp strncmp strcasecmp strncasecmp each error_reporting define defined trigger_error user_error set_error_handler restore_error_handler get_declared_classes get_loaded_extensions extension_loaded get_extension_funcs debug_backtrace constant bin2hex hex2bin sleep usleep time mktime gmmktime strftime gmstrftime strtotime date gmdate getdate localtime checkdate flush wordwrap htmlspecialchars htmlentities html_entity_decode md5 md5_file crc32 getimagesize image_type_to_mime_type phpinfo phpversion phpcredits strnatcmp strnatcasecmp substr_count strspn strcspn strtok strtoupper strtolower strpos strrpos strrev hebrev hebrevc nl2br basename dirname pathinfo stripslashes stripcslashes strstr stristr strrchr str_shuffle str_word_count strcoll substr substr_replace quotemeta ucfirst ucwords strtr addslashes addcslashes rtrim str_replace str_repeat count_chars chunk_split trim ltrim strip_tags similar_text explode implode setlocale localeconv parse_str str_pad chop strchr sprintf printf vprintf vsprintf sscanf fscanf parse_url urlencode urldecode rawurlencode rawurldecode readlink linkinfo link unlink exec system escapeshellcmd escapeshellarg passthru shell_exec proc_open proc_close rand srand getrandmax mt_rand mt_srand mt_getrandmax base64_decode base64_encode abs ceil floor round is_finite is_nan is_infinite bindec hexdec octdec decbin decoct dechex base_convert number_format fmod ip2long long2ip getenv putenv getopt microtime gettimeofday getrusage uniqid quoted_printable_decode set_time_limit get_cfg_var magic_quotes_runtime set_magic_quotes_runtime get_magic_quotes_gpc get_magic_quotes_runtime import_request_variables error_log serialize unserialize memory_get_usage var_dump var_export debug_zval_dump print_r highlight_file show_source highlight_string ini_get ini_get_all ini_set ini_alter ini_restore get_include_path set_include_path restore_include_path setcookie header headers_sent connection_aborted connection_status ignore_user_abort parse_ini_file is_uploaded_file move_uploaded_file intval floatval doubleval strval gettype settype is_null is_resource is_bool is_long is_float is_int is_integer is_double is_real is_numeric is_string is_array is_object is_scalar ereg ereg_replace eregi eregi_replace split spliti join sql_regcase dl pclose popen readfile rewind rmdir umask fclose feof fgetc fgets fgetss fread fopen fpassthru ftruncate fstat fseek ftell fflush fwrite fputs mkdir rename copy tempnam tmpfile file file_get_contents stream_select stream_context_create stream_context_set_params stream_context_set_option stream_context_get_options stream_filter_prepend stream_filter_append fgetcsv flock get_meta_tags stream_set_write_buffer set_file_buffer set_socket_blocking stream_set_blocking socket_set_blocking stream_get_meta_data stream_register_wrapper stream_wrapper_register stream_set_timeout socket_set_timeout socket_get_status realpath fnmatch fsockopen pfsockopen pack unpack get_browser crypt opendir closedir chdir getcwd rewinddir readdir dir glob fileatime filectime filegroup fileinode filemtime fileowner fileperms filesize filetype file_exists is_writable is_writeable is_readable is_executable is_file is_dir is_link stat lstat chown touch clearstatcache mail ob_start ob_flush ob_clean ob_end_flush ob_end_clean ob_get_flush ob_get_clean ob_get_length ob_get_level ob_get_status ob_get_contents ob_implicit_flush ob_list_handlers ksort krsort natsort natcasesort asort arsort sort rsort usort uasort uksort shuffle array_walk count end prev next reset current key min max in_array array_search extract compact array_fill range array_multisort array_push array_pop array_shift array_unshift array_splice array_slice array_merge array_merge_recursive array_keys array_values array_count_values array_reverse array_reduce array_pad array_flip array_change_key_case array_rand array_unique array_intersect array_intersect_assoc array_diff array_diff_assoc array_sum array_filter array_map array_chunk array_key_exists pos sizeof key_exists assert assert_options v
   CodeMirror.registerHelper("hintWords", "php", [phpKeywords, phpAtoms, phpBuiltin].join(" ").split(" "));
   CodeMirror.registerHelper("wordChars", "php", /[\w$]/);
 
@@ -12800,11 +12729,10 @@ CodeMirror.defineMIME("text/x-markdown", "markdown");
   CodeMirror.defineMIME("application/x-httpd-php-open", {name: "php", startOpen: true});
   CodeMirror.defineMIME("text/x-php", phpConfig);
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/php/php.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/php/php.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/diff/diff.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/diff/diff.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -12852,11 +12780,10 @@ CodeMirror.defineMode("diff", function() {
 CodeMirror.defineMIME("text/x-diff", "diff");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/diff/diff.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/diff/diff.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/rst/rst.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/rst/rst.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -13414,11 +13341,10 @@ CodeMirror.defineMIME('text/x-rst', 'rst');
 ///////////////////////////////////////////////////////////////////////////////
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/rst/rst.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/rst/rst.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/stex/stex.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/stex/stex.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -13672,7 +13598,8 @@ CodeMirror.defineMode("stex", function() {
         },
         token: function(stream, state) {
             return state.f(stream, state);
-        }
+        },
+        lineComment: "%"
     };
 });
 
@@ -13680,11 +13607,10 @@ CodeMirror.defineMIME("text/x-stex", "stex");
 CodeMirror.defineMIME("text/x-latex", "stex");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/stex/stex.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/stex/stex.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/perl/perl.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/perl/perl.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -14475,8 +14401,8 @@ CodeMirror.defineMode("perl",function(){
                                 style:null,
                                 tail:null};},
                 token:function(stream,state){
-                        return (state.tokenize||tokenPerl)(stream,state);},
-                electricChars:"{}"};});
+                        return (state.tokenize||tokenPerl)(stream,state);}
+                };});
 
 CodeMirror.registerHelper("wordChars", "perl", /[\w$]/);
 
@@ -14517,11 +14443,10 @@ function eatSuffix(stream, c){
 }
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/perl/perl.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/perl/perl.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/ruby/ruby.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/ruby/ruby.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -14806,11 +14731,10 @@ CodeMirror.defineMode("ruby", function(config) {
 CodeMirror.defineMIME("text/x-ruby", "ruby");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/ruby/ruby.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/ruby/ruby.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/shell/shell.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/shell/shell.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -14949,11 +14873,10 @@ CodeMirror.defineMode('shell', function() {
 CodeMirror.defineMIME('text/x-sh', 'shell');
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/shell/shell.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/shell/shell.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/sql/sql.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/sql/sql.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15169,7 +15092,8 @@ CodeMirror.defineMode("sql", function(config, parserConfig) {
     while ((ch = stream.next()) != null) {
       if (ch == "`" && !stream.eat("`")) return "variable-2";
     }
-    return null;
+    stream.backUp(stream.current().length - 1);
+    return stream.eatWhile(/\w/) ? "variable-2" : null;
   }
 
   // variable token
@@ -15346,11 +15270,10 @@ CodeMirror.defineMode("sql", function(config, parserConfig) {
   dateSQL:
     Used for date/time SQL standard syntax, because not all DBMS's support same temporal types.
 */
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/sql/sql.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/sql/sql.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/mode/go/go.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/mode/go/go.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15535,11 +15458,10 @@ CodeMirror.defineMode("go", function(config) {
 CodeMirror.defineMIME("text/x-go", "go");
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/mode/go/go.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/mode/go/go.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/keymap/emacs.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/keymap/emacs.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -15942,11 +15864,10 @@ CodeMirror.defineMIME("text/x-go", "go");
   for (var i = 0; i < 10; ++i) regPrefix(String(i));
   regPrefix("-");
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/keymap/emacs.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/keymap/emacs.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -16021,290 +15942,205 @@ CodeMirror.defineMIME("text/x-go", "go");
   var defaultKeymap = [
     // Key to key mapping. This goes first to make it possible to override
     // existing mappings.
-    { keys: ['<Left>'], type: 'keyToKey', toKeys: ['h'] },
-    { keys: ['<Right>'], type: 'keyToKey', toKeys: ['l'] },
-    { keys: ['<Up>'], type: 'keyToKey', toKeys: ['k'] },
-    { keys: ['<Down>'], type: 'keyToKey', toKeys: ['j'] },
-    { keys: ['<Space>'], type: 'keyToKey', toKeys: ['l'] },
-    { keys: ['<BS>'], type: 'keyToKey', toKeys: ['h'] },
-    { keys: ['<C-Space>'], type: 'keyToKey', toKeys: ['W'] },
-    { keys: ['<C-BS>'], type: 'keyToKey', toKeys: ['B'] },
-    { keys: ['<S-Space>'], type: 'keyToKey', toKeys: ['w'] },
-    { keys: ['<S-BS>'], type: 'keyToKey', toKeys: ['b'] },
-    { keys: ['<C-n>'], type: 'keyToKey', toKeys: ['j'] },
-    { keys: ['<C-p>'], type: 'keyToKey', toKeys: ['k'] },
-    { keys: ['<C-[>'], type: 'keyToKey', toKeys: ['<Esc>'] },
-    { keys: ['<C-c>'], type: 'keyToKey', toKeys: ['<Esc>'] },
-    { keys: ['s'], type: 'keyToKey', toKeys: ['c', 'l'], context: 'normal' },
-    { keys: ['s'], type: 'keyToKey', toKeys: ['x', 'i'], context: 'visual'},
-    { keys: ['S'], type: 'keyToKey', toKeys: ['c', 'c'], context: 'normal' },
-    { keys: ['S'], type: 'keyToKey', toKeys: ['d', 'c', 'c'], context: 'visual' },
-    { keys: ['<Home>'], type: 'keyToKey', toKeys: ['0'] },
-    { keys: ['<End>'], type: 'keyToKey', toKeys: ['$'] },
-    { keys: ['<PageUp>'], type: 'keyToKey', toKeys: ['<C-b>'] },
-    { keys: ['<PageDown>'], type: 'keyToKey', toKeys: ['<C-f>'] },
-    { keys: ['<CR>'], type: 'keyToKey', toKeys: ['j', '^'], context: 'normal' },
+    { keys: '<Left>', type: 'keyToKey', toKeys: 'h' },
+    { keys: '<Right>', type: 'keyToKey', toKeys: 'l' },
+    { keys: '<Up>', type: 'keyToKey', toKeys: 'k' },
+    { keys: '<Down>', type: 'keyToKey', toKeys: 'j' },
+    { keys: '<Space>', type: 'keyToKey', toKeys: 'l' },
+    { keys: '<BS>', type: 'keyToKey', toKeys: 'h' },
+    { keys: '<C-Space>', type: 'keyToKey', toKeys: 'W' },
+    { keys: '<C-BS>', type: 'keyToKey', toKeys: 'B' },
+    { keys: '<S-Space>', type: 'keyToKey', toKeys: 'w' },
+    { keys: '<S-BS>', type: 'keyToKey', toKeys: 'b' },
+    { keys: '<C-n>', type: 'keyToKey', toKeys: 'j' },
+    { keys: '<C-p>', type: 'keyToKey', toKeys: 'k' },
+    { keys: '<C-[>', type: 'keyToKey', toKeys: '<Esc>' },
+    { keys: '<C-c>', type: 'keyToKey', toKeys: '<Esc>' },
+    { keys: '<C-[>', type: 'keyToKey', toKeys: '<Esc>', context: 'insert' },
+    { keys: '<C-c>', type: 'keyToKey', toKeys: '<Esc>', context: 'insert' },
+    { keys: 's', type: 'keyToKey', toKeys: 'cl', context: 'normal' },
+    { keys: 's', type: 'keyToKey', toKeys: 'xi', context: 'visual'},
+    { keys: 'S', type: 'keyToKey', toKeys: 'cc', context: 'normal' },
+    { keys: 'S', type: 'keyToKey', toKeys: 'dcc', context: 'visual' },
+    { keys: '<Home>', type: 'keyToKey', toKeys: '0' },
+    { keys: '<End>', type: 'keyToKey', toKeys: '$' },
+    { keys: '<PageUp>', type: 'keyToKey', toKeys: '<C-b>' },
+    { keys: '<PageDown>', type: 'keyToKey', toKeys: '<C-f>' },
+    { keys: '<CR>', type: 'keyToKey', toKeys: 'j^', context: 'normal' },
     // Motions
-    { keys: ['H'], type: 'motion',
-        motion: 'moveToTopLine',
-        motionArgs: { linewise: true, toJumplist: true }},
-    { keys: ['M'], type: 'motion',
-        motion: 'moveToMiddleLine',
-        motionArgs: { linewise: true, toJumplist: true }},
-    { keys: ['L'], type: 'motion',
-        motion: 'moveToBottomLine',
-        motionArgs: { linewise: true, toJumplist: true }},
-    { keys: ['h'], type: 'motion',
-        motion: 'moveByCharacters',
-        motionArgs: { forward: false }},
-    { keys: ['l'], type: 'motion',
-        motion: 'moveByCharacters',
-        motionArgs: { forward: true }},
-    { keys: ['j'], type: 'motion',
-        motion: 'moveByLines',
-        motionArgs: { forward: true, linewise: true }},
-    { keys: ['k'], type: 'motion',
-        motion: 'moveByLines',
-        motionArgs: { forward: false, linewise: true }},
-    { keys: ['g','j'], type: 'motion',
-        motion: 'moveByDisplayLines',
-        motionArgs: { forward: true }},
-    { keys: ['g','k'], type: 'motion',
-        motion: 'moveByDisplayLines',
-        motionArgs: { forward: false }},
-    { keys: ['w'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: true, wordEnd: false }},
-    { keys: ['W'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: true, wordEnd: false, bigWord: true }},
-    { keys: ['e'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: true, wordEnd: true, inclusive: true }},
-    { keys: ['E'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: true, wordEnd: true, bigWord: true,
-            inclusive: true }},
-    { keys: ['b'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: false, wordEnd: false }},
-    { keys: ['B'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: false, wordEnd: false, bigWord: true }},
-    { keys: ['g', 'e'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: false, wordEnd: true, inclusive: true }},
-    { keys: ['g', 'E'], type: 'motion',
-        motion: 'moveByWords',
-        motionArgs: { forward: false, wordEnd: true, bigWord: true,
-            inclusive: true }},
-    { keys: ['{'], type: 'motion', motion: 'moveByParagraph',
-        motionArgs: { forward: false, toJumplist: true }},
-    { keys: ['}'], type: 'motion', motion: 'moveByParagraph',
-        motionArgs: { forward: true, toJumplist: true }},
-    { keys: ['<C-f>'], type: 'motion',
-        motion: 'moveByPage', motionArgs: { forward: true }},
-    { keys: ['<C-b>'], type: 'motion',
-        motion: 'moveByPage', motionArgs: { forward: false }},
-    { keys: ['<C-d>'], type: 'motion',
-        motion: 'moveByScroll',
-        motionArgs: { forward: true, explicitRepeat: true }},
-    { keys: ['<C-u>'], type: 'motion',
-        motion: 'moveByScroll',
-        motionArgs: { forward: false, explicitRepeat: true }},
-    { keys: ['g', 'g'], type: 'motion',
-        motion: 'moveToLineOrEdgeOfDocument',
-        motionArgs: { forward: false, explicitRepeat: true, linewise: true, toJumplist: true }},
-    { keys: ['G'], type: 'motion',
-        motion: 'moveToLineOrEdgeOfDocument',
-        motionArgs: { forward: true, explicitRepeat: true, linewise: true, toJumplist: true }},
-    { keys: ['0'], type: 'motion', motion: 'moveToStartOfLine' },
-    { keys: ['^'], type: 'motion',
-        motion: 'moveToFirstNonWhiteSpaceCharacter' },
-    { keys: ['+'], type: 'motion',
-        motion: 'moveByLines',
-        motionArgs: { forward: true, toFirstChar:true }},
-    { keys: ['-'], type: 'motion',
-        motion: 'moveByLines',
-        motionArgs: { forward: false, toFirstChar:true }},
-    { keys: ['_'], type: 'motion',
-        motion: 'moveByLines',
-        motionArgs: { forward: true, toFirstChar:true, repeatOffset:-1 }},
-    { keys: ['$'], type: 'motion',
-        motion: 'moveToEol',
-        motionArgs: { inclusive: true }},
-    { keys: ['%'], type: 'motion',
-        motion: 'moveToMatchedSymbol',
-        motionArgs: { inclusive: true, toJumplist: true }},
-    { keys: ['f', 'character'], type: 'motion',
-        motion: 'moveToCharacter',
-        motionArgs: { forward: true , inclusive: true }},
-    { keys: ['F', 'character'], type: 'motion',
-        motion: 'moveToCharacter',
-        motionArgs: { forward: false }},
-    { keys: ['t', 'character'], type: 'motion',
-        motion: 'moveTillCharacter',
-        motionArgs: { forward: true, inclusive: true }},
-    { keys: ['T', 'character'], type: 'motion',
-        motion: 'moveTillCharacter',
-        motionArgs: { forward: false }},
-    { keys: [';'], type: 'motion', motion: 'repeatLastCharacterSearch',
-        motionArgs: { forward: true }},
-    { keys: [','], type: 'motion', motion: 'repeatLastCharacterSearch',
-        motionArgs: { forward: false }},
-    { keys: ['\'', 'character'], type: 'motion', motion: 'goToMark',
-        motionArgs: {toJumplist: true, linewise: true}},
-    { keys: ['`', 'character'], type: 'motion', motion: 'goToMark',
-        motionArgs: {toJumplist: true}},
-    { keys: [']', '`'], type: 'motion', motion: 'jumpToMark', motionArgs: { forward: true } },
-    { keys: ['[', '`'], type: 'motion', motion: 'jumpToMark', motionArgs: { forward: false } },
-    { keys: [']', '\''], type: 'motion', motion: 'jumpToMark', motionArgs: { forward: true, linewise: true } },
-    { keys: ['[', '\''], type: 'motion', motion: 'jumpToMark', motionArgs: { forward: false, linewise: true } },
+    { keys: 'H', type: 'motion', motion: 'moveToTopLine', motionArgs: { linewise: true, toJumplist: true }},
+    { keys: 'M', type: 'motion', motion: 'moveToMiddleLine', motionArgs: { linewise: true, toJumplist: true }},
+    { keys: 'L', type: 'motion', motion: 'moveToBottomLine', motionArgs: { linewise: true, toJumplist: true }},
+    { keys: 'h', type: 'motion', motion: 'moveByCharacters', motionArgs: { forward: false }},
+    { keys: 'l', type: 'motion', motion: 'moveByCharacters', motionArgs: { forward: true }},
+    { keys: 'j', type: 'motion', motion: 'moveByLines', motionArgs: { forward: true, linewise: true }},
+    { keys: 'k', type: 'motion', motion: 'moveByLines', motionArgs: { forward: false, linewise: true }},
+    { keys: 'gj', type: 'motion', motion: 'moveByDisplayLines', motionArgs: { forward: true }},
+    { keys: 'gk', type: 'motion', motion: 'moveByDisplayLines', motionArgs: { forward: false }},
+    { keys: 'w', type: 'motion', motion: 'moveByWords', motionArgs: { forward: true, wordEnd: false }},
+    { keys: 'W', type: 'motion', motion: 'moveByWords', motionArgs: { forward: true, wordEnd: false, bigWord: true }},
+    { keys: 'e', type: 'motion', motion: 'moveByWords', motionArgs: { forward: true, wordEnd: true, inclusive: true }},
+    { keys: 'E', type: 'motion', motion: 'moveByWords', motionArgs: { forward: true, wordEnd: true, bigWord: true, inclusive: true }},
+    { keys: 'b', type: 'motion', motion: 'moveByWords', motionArgs: { forward: false, wordEnd: false }},
+    { keys: 'B', type: 'motion', motion: 'moveByWords', motionArgs: { forward: false, wordEnd: false, bigWord: true }},
+    { keys: 'ge', type: 'motion', motion: 'moveByWords', motionArgs: { forward: false, wordEnd: true, inclusive: true }},
+    { keys: 'gE', type: 'motion', motion: 'moveByWords', motionArgs: { forward: false, wordEnd: true, bigWord: true, inclusive: true }},
+    { keys: '{', type: 'motion', motion: 'moveByParagraph', motionArgs: { forward: false, toJumplist: true }},
+    { keys: '}', type: 'motion', motion: 'moveByParagraph', motionArgs: { forward: true, toJumplist: true }},
+    { keys: '<C-f>', type: 'motion', motion: 'moveByPage', motionArgs: { forward: true }},
+    { keys: '<C-b>', type: 'motion', motion: 'moveByPage', motionArgs: { forward: false }},
+    { keys: '<C-d>', type: 'motion', motion: 'moveByScroll', motionArgs: { forward: true, explicitRepeat: true }},
+    { keys: '<C-u>', type: 'motion', motion: 'moveByScroll', motionArgs: { forward: false, explicitRepeat: true }},
+    { keys: 'gg', type: 'motion', motion: 'moveToLineOrEdgeOfDocument', motionArgs: { forward: false, explicitRepeat: true, linewise: true, toJumplist: true }},
+    { keys: 'G', type: 'motion', motion: 'moveToLineOrEdgeOfDocument', motionArgs: { forward: true, explicitRepeat: true, linewise: true, toJumplist: true }},
+    { keys: '0', type: 'motion', motion: 'moveToStartOfLine' },
+    { keys: '^', type: 'motion', motion: 'moveToFirstNonWhiteSpaceCharacter' },
+    { keys: '+', type: 'motion', motion: 'moveByLines', motionArgs: { forward: true, toFirstChar:true }},
+    { keys: '-', type: 'motion', motion: 'moveByLines', motionArgs: { forward: false, toFirstChar:true }},
+    { keys: '_', type: 'motion', motion: 'moveByLines', motionArgs: { forward: true, toFirstChar:true, repeatOffset:-1 }},
+    { keys: '$', type: 'motion', motion: 'moveToEol', motionArgs: { inclusive: true }},
+    { keys: '%', type: 'motion', motion: 'moveToMatchedSymbol', motionArgs: { inclusive: true, toJumplist: true }},
+    { keys: 'f<character>', type: 'motion', motion: 'moveToCharacter', motionArgs: { forward: true , inclusive: true }},
+    { keys: 'F<character>', type: 'motion', motion: 'moveToCharacter', motionArgs: { forward: false }},
+    { keys: 't<character>', type: 'motion', motion: 'moveTillCharacter', motionArgs: { forward: true, inclusive: true }},
+    { keys: 'T<character>', type: 'motion', motion: 'moveTillCharacter', motionArgs: { forward: false }},
+    { keys: ';', type: 'motion', motion: 'repeatLastCharacterSearch', motionArgs: { forward: true }},
+    { keys: ',', type: 'motion', motion: 'repeatLastCharacterSearch', motionArgs: { forward: false }},
+    { keys: '\'<character>', type: 'motion', motion: 'goToMark', motionArgs: {toJumplist: true, linewise: true}},
+    { keys: '`<character>', type: 'motion', motion: 'goToMark', motionArgs: {toJumplist: true}},
+    { keys: ']`', type: 'motion', motion: 'jumpToMark', motionArgs: { forward: true } },
+    { keys: '[`', type: 'motion', motion: 'jumpToMark', motionArgs: { forward: false } },
+    { keys: ']\'', type: 'motion', motion: 'jumpToMark', motionArgs: { forward: true, linewise: true } },
+    { keys: '[\'', type: 'motion', motion: 'jumpToMark', motionArgs: { forward: false, linewise: true } },
     // the next two aren't motions but must come before more general motion declarations
-    { keys: [']', 'p'], type: 'action', action: 'paste', isEdit: true,
-        actionArgs: { after: true, isEdit: true, matchIndent: true}},
-    { keys: ['[', 'p'], type: 'action', action: 'paste', isEdit: true,
-        actionArgs: { after: false, isEdit: true, matchIndent: true}},
-    { keys: [']', 'character'], type: 'motion',
-        motion: 'moveToSymbol',
-        motionArgs: { forward: true, toJumplist: true}},
-    { keys: ['[', 'character'], type: 'motion',
-        motion: 'moveToSymbol',
-        motionArgs: { forward: false, toJumplist: true}},
-    { keys: ['|'], type: 'motion',
-        motion: 'moveToColumn',
-        motionArgs: { }},
-    { keys: ['o'], type: 'motion', motion: 'moveToOtherHighlightedEnd', motionArgs: { }, context:'visual'},
-    { keys: ['O'], type: 'motion', motion: 'moveToOtherHighlightedEnd', motionArgs: {sameLine: true}, context:'visual'},
+    { keys: ']p', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: true, isEdit: true, matchIndent: true}},
+    { keys: '[p', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: false, isEdit: true, matchIndent: true}},
+    { keys: ']<character>', type: 'motion', motion: 'moveToSymbol', motionArgs: { forward: true, toJumplist: true}},
+    { keys: '[<character>', type: 'motion', motion: 'moveToSymbol', motionArgs: { forward: false, toJumplist: true}},
+    { keys: '|', type: 'motion', motion: 'moveToColumn'},
+    { keys: 'o', type: 'motion', motion: 'moveToOtherHighlightedEnd', context:'visual'},
+    { keys: 'O', type: 'motion', motion: 'moveToOtherHighlightedEnd', motionArgs: {sameLine: true}, context:'visual'},
     // Operators
-    { keys: ['d'], type: 'operator', operator: 'delete' },
-    { keys: ['y'], type: 'operator', operator: 'yank' },
-    { keys: ['c'], type: 'operator', operator: 'change' },
-    { keys: ['>'], type: 'operator', operator: 'indent',
-        operatorArgs: { indentRight: true }},
-    { keys: ['<'], type: 'operator', operator: 'indent',
-        operatorArgs: { indentRight: false }},
-    { keys: ['g', '~'], type: 'operator', operator: 'swapcase' },
-    { keys: ['n'], type: 'motion', motion: 'findNext',
-        motionArgs: { forward: true, toJumplist: true }},
-    { keys: ['N'], type: 'motion', motion: 'findNext',
-        motionArgs: { forward: false, toJumplist: true }},
+    { keys: 'd', type: 'operator', operator: 'delete' },
+    { keys: 'y', type: 'operator', operator: 'yank' },
+    { keys: 'c', type: 'operator', operator: 'change' },
+    { keys: '>', type: 'operator', operator: 'indent', operatorArgs: { indentRight: true }},
+    { keys: '<', type: 'operator', operator: 'indent', operatorArgs: { indentRight: false }},
+    { keys: 'g~', type: 'operator', operator: 'swapcase' },
+    { keys: 'n', type: 'motion', motion: 'findNext', motionArgs: { forward: true, toJumplist: true }},
+    { keys: 'N', type: 'motion', motion: 'findNext', motionArgs: { forward: false, toJumplist: true }},
     // Operator-Motion dual commands
-    { keys: ['x'], type: 'operatorMotion', operator: 'delete',
-        motion: 'moveByCharacters', motionArgs: { forward: true },
-        operatorMotionArgs: { visualLine: false }},
-    { keys: ['X'], type: 'operatorMotion', operator: 'delete',
-        motion: 'moveByCharacters', motionArgs: { forward: false },
-        operatorMotionArgs: { visualLine: true }},
-    { keys: ['D'], type: 'operatorMotion', operator: 'delete',
-      motion: 'moveToEol', motionArgs: { inclusive: true },
-        operatorMotionArgs: { visualLine: true }},
-    { keys: ['Y'], type: 'operatorMotion', operator: 'yank',
-        motion: 'moveToEol', motionArgs: { inclusive: true },
-        operatorMotionArgs: { visualLine: true }},
-    { keys: ['C'], type: 'operatorMotion',
-        operator: 'change',
-        motion: 'moveToEol', motionArgs: { inclusive: true },
-        operatorMotionArgs: { visualLine: true }},
-    { keys: ['~'], type: 'operatorMotion',
-        operator: 'swapcase', operatorArgs: { shouldMoveCursor: true },
-        motion: 'moveByCharacters', motionArgs: { forward: true }},
+    { keys: 'x', type: 'operatorMotion', operator: 'delete', motion: 'moveByCharacters', motionArgs: { forward: true }, operatorMotionArgs: { visualLine: false }},
+    { keys: 'X', type: 'operatorMotion', operator: 'delete', motion: 'moveByCharacters', motionArgs: { forward: false }, operatorMotionArgs: { visualLine: true }},
+    { keys: 'D', type: 'operatorMotion', operator: 'delete', motion: 'moveToEol', motionArgs: { inclusive: true }, operatorMotionArgs: { visualLine: true }},
+    { keys: 'Y', type: 'operatorMotion', operator: 'yank', motion: 'moveToEol', motionArgs: { inclusive: true }, operatorMotionArgs: { visualLine: true }},
+    { keys: 'C', type: 'operatorMotion', operator: 'change', motion: 'moveToEol', motionArgs: { inclusive: true }, operatorMotionArgs: { visualLine: true }},
+    { keys: '~', type: 'operatorMotion', operator: 'swapcase', operatorArgs: { shouldMoveCursor: true }, motion: 'moveByCharacters', motionArgs: { forward: true }},
+    { keys: '<C-w>', type: 'operatorMotion', operator: 'delete', motion: 'moveByWords', motionArgs: { forward: false, wordEnd: false }, context: 'insert' },
     // Actions
-    { keys: ['<C-i>'], type: 'action', action: 'jumpListWalk',
-        actionArgs: { forward: true }},
-    { keys: ['<C-o>'], type: 'action', action: 'jumpListWalk',
-        actionArgs: { forward: false }},
-    { keys: ['<C-e>'], type: 'action',
-        action: 'scroll',
-        actionArgs: { forward: true, linewise: true }},
-    { keys: ['<C-y>'], type: 'action',
-        action: 'scroll',
-        actionArgs: { forward: false, linewise: true }},
-    { keys: ['a'], type: 'action', action: 'enterInsertMode', isEdit: true,
-        actionArgs: { insertAt: 'charAfter' }},
-    { keys: ['A'], type: 'action', action: 'enterInsertMode', isEdit: true,
-        actionArgs: { insertAt: 'eol' }},
-    { keys: ['A'], type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'endOfSelectedArea' }, context: 'visual' },
-    { keys: ['i'], type: 'action', action: 'enterInsertMode', isEdit: true,
-        actionArgs: { insertAt: 'inplace' }},
-    { keys: ['I'], type: 'action', action: 'enterInsertMode', isEdit: true,
-        actionArgs: { insertAt: 'firstNonBlank' }},
-    { keys: ['o'], type: 'action', action: 'newLineAndEnterInsertMode',
-        isEdit: true, interlaceInsertRepeat: true,
-        actionArgs: { after: true }},
-    { keys: ['O'], type: 'action', action: 'newLineAndEnterInsertMode',
-        isEdit: true, interlaceInsertRepeat: true,
-        actionArgs: { after: false }},
-    { keys: ['v'], type: 'action', action: 'toggleVisualMode' },
-    { keys: ['V'], type: 'action', action: 'toggleVisualMode',
-        actionArgs: { linewise: true }},
-    { keys: ['<C-v>'], type: 'action', action: 'toggleVisualMode',
-        actionArgs: { blockwise: true }},
-    { keys: ['g', 'v'], type: 'action', action: 'reselectLastSelection' },
-    { keys: ['J'], type: 'action', action: 'joinLines', isEdit: true },
-    { keys: ['p'], type: 'action', action: 'paste', isEdit: true,
-        actionArgs: { after: true, isEdit: true }},
-    { keys: ['P'], type: 'action', action: 'paste', isEdit: true,
-        actionArgs: { after: false, isEdit: true }},
-    { keys: ['r', 'character'], type: 'action', action: 'replace', isEdit: true },
-    { keys: ['@', 'character'], type: 'action', action: 'replayMacro' },
-    { keys: ['q', 'character'], type: 'action', action: 'enterMacroRecordMode' },
+    { keys: '<C-i>', type: 'action', action: 'jumpListWalk', actionArgs: { forward: true }},
+    { keys: '<C-o>', type: 'action', action: 'jumpListWalk', actionArgs: { forward: false }},
+    { keys: '<C-e>', type: 'action', action: 'scroll', actionArgs: { forward: true, linewise: true }},
+    { keys: '<C-y>', type: 'action', action: 'scroll', actionArgs: { forward: false, linewise: true }},
+    { keys: 'a', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'charAfter' }, context: 'normal' },
+    { keys: 'A', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'eol' }, context: 'normal' },
+    { keys: 'A', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'endOfSelectedArea' }, context: 'visual' },
+    { keys: 'i', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'inplace' }, context: 'normal' },
+    { keys: 'I', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { insertAt: 'firstNonBlank' }},
+    { keys: 'o', type: 'action', action: 'newLineAndEnterInsertMode', isEdit: true, interlaceInsertRepeat: true, actionArgs: { after: true }, context: 'normal' },
+    { keys: 'O', type: 'action', action: 'newLineAndEnterInsertMode', isEdit: true, interlaceInsertRepeat: true, actionArgs: { after: false }, context: 'normal' },
+    { keys: 'v', type: 'action', action: 'toggleVisualMode' },
+    { keys: 'V', type: 'action', action: 'toggleVisualMode', actionArgs: { linewise: true }},
+    { keys: '<C-v>', type: 'action', action: 'toggleVisualMode', actionArgs: { blockwise: true }},
+    { keys: 'gv', type: 'action', action: 'reselectLastSelection' },
+    { keys: 'J', type: 'action', action: 'joinLines', isEdit: true },
+    { keys: 'p', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: true, isEdit: true }},
+    { keys: 'P', type: 'action', action: 'paste', isEdit: true, actionArgs: { after: false, isEdit: true }},
+    { keys: 'r<character>', type: 'action', action: 'replace', isEdit: true },
+    { keys: '@<character>', type: 'action', action: 'replayMacro' },
+    { keys: 'q<character>', type: 'action', action: 'enterMacroRecordMode' },
     // Handle Replace-mode as a special case of insert mode.
-    { keys: ['R'], type: 'action', action: 'enterInsertMode', isEdit: true,
-        actionArgs: { replace: true }},
-    { keys: ['u'], type: 'action', action: 'undo' },
-    { keys: ['u'], type: 'action', action: 'changeCase', actionArgs: {toLower: true}, context: 'visual', isEdit: true },
-    { keys: ['U'],type: 'action', action: 'changeCase', actionArgs: {toLower: false}, context: 'visual', isEdit: true },
-    { keys: ['<C-r>'], type: 'action', action: 'redo' },
-    { keys: ['m', 'character'], type: 'action', action: 'setMark' },
-    { keys: ['"', 'character'], type: 'action', action: 'setRegister' },
-    { keys: ['z', 'z'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'center' }},
-    { keys: ['z', '.'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'center' },
-        motion: 'moveToFirstNonWhiteSpaceCharacter' },
-    { keys: ['z', 't'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'top' }},
-    { keys: ['z', '<CR>'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'top' },
-        motion: 'moveToFirstNonWhiteSpaceCharacter' },
-    { keys: ['z', '-'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'bottom' }},
-    { keys: ['z', 'b'], type: 'action', action: 'scrollToCursor',
-        actionArgs: { position: 'bottom' },
-        motion: 'moveToFirstNonWhiteSpaceCharacter' },
-    { keys: ['.'], type: 'action', action: 'repeatLastEdit' },
-    { keys: ['<C-a>'], type: 'action', action: 'incrementNumberToken',
-        isEdit: true,
-        actionArgs: {increase: true, backtrack: false}},
-    { keys: ['<C-x>'], type: 'action', action: 'incrementNumberToken',
-        isEdit: true,
-        actionArgs: {increase: false, backtrack: false}},
+    { keys: 'R', type: 'action', action: 'enterInsertMode', isEdit: true, actionArgs: { replace: true }},
+    { keys: 'u', type: 'action', action: 'undo', context: 'normal' },
+    { keys: 'u', type: 'action', action: 'changeCase', actionArgs: {toLower: true}, context: 'visual', isEdit: true },
+    { keys: 'U',type: 'action', action: 'changeCase', actionArgs: {toLower: false}, context: 'visual', isEdit: true },
+    { keys: '<C-r>', type: 'action', action: 'redo' },
+    { keys: 'm<character>', type: 'action', action: 'setMark' },
+    { keys: '"<character>', type: 'action', action: 'setRegister' },
+    { keys: 'zz', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'center' }},
+    { keys: 'z.', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'center' }, motion: 'moveToFirstNonWhiteSpaceCharacter' },
+    { keys: 'zt', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'top' }},
+    { keys: 'z<CR>', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'top' }, motion: 'moveToFirstNonWhiteSpaceCharacter' },
+    { keys: 'z-', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'bottom' }},
+    { keys: 'zb', type: 'action', action: 'scrollToCursor', actionArgs: { position: 'bottom' }, motion: 'moveToFirstNonWhiteSpaceCharacter' },
+    { keys: '.', type: 'action', action: 'repeatLastEdit' },
+    { keys: '<C-a>', type: 'action', action: 'incrementNumberToken', isEdit: true, actionArgs: {increase: true, backtrack: false}},
+    { keys: '<C-x>', type: 'action', action: 'incrementNumberToken', isEdit: true, actionArgs: {increase: false, backtrack: false}},
     // Text object motions
-    { keys: ['a', 'character'], type: 'motion',
-        motion: 'textObjectManipulation' },
-    { keys: ['i', 'character'], type: 'motion',
-        motion: 'textObjectManipulation',
-        motionArgs: { textObjectInner: true }},
+    { keys: 'a<character>', type: 'motion', motion: 'textObjectManipulation' },
+    { keys: 'i<character>', type: 'motion', motion: 'textObjectManipulation', motionArgs: { textObjectInner: true }},
     // Search
-    { keys: ['/'], type: 'search',
-        searchArgs: { forward: true, querySrc: 'prompt', toJumplist: true }},
-    { keys: ['?'], type: 'search',
-        searchArgs: { forward: false, querySrc: 'prompt', toJumplist: true }},
-    { keys: ['*'], type: 'search',
-        searchArgs: { forward: true, querySrc: 'wordUnderCursor', wholeWordOnly: true, toJumplist: true }},
-    { keys: ['#'], type: 'search',
-        searchArgs: { forward: false, querySrc: 'wordUnderCursor', wholeWordOnly: true, toJumplist: true }},
-    { keys: ['g', '*'], type: 'search', searchArgs: { forward: true, querySrc: 'wordUnderCursor', toJumplist: true }},
-    { keys: ['g', '#'], type: 'search', searchArgs: { forward: false, querySrc: 'wordUnderCursor', toJumplist: true }},
+    { keys: '/', type: 'search', searchArgs: { forward: true, querySrc: 'prompt', toJumplist: true }},
+    { keys: '?', type: 'search', searchArgs: { forward: false, querySrc: 'prompt', toJumplist: true }},
+    { keys: '*', type: 'search', searchArgs: { forward: true, querySrc: 'wordUnderCursor', wholeWordOnly: true, toJumplist: true }},
+    { keys: '#', type: 'search', searchArgs: { forward: false, querySrc: 'wordUnderCursor', wholeWordOnly: true, toJumplist: true }},
+    { keys: 'g*', type: 'search', searchArgs: { forward: true, querySrc: 'wordUnderCursor', toJumplist: true }},
+    { keys: 'g#', type: 'search', searchArgs: { forward: false, querySrc: 'wordUnderCursor', toJumplist: true }},
     // Ex command
-    { keys: [':'], type: 'ex' }
+    { keys: ':', type: 'ex' }
   ];
 
   var Pos = CodeMirror.Pos;
 
+  var modifierCodes = [16, 17, 18, 91];
+  var specialKey = {Enter:'CR',Backspace:'BS',Delete:'Del'};
+  var mac = /Mac/.test(navigator.platform);
   var Vim = function() {
     CodeMirror.defineOption('vimMode', false, function(cm, val) {
+      function lookupKey(e) {
+        var keyCode = e.keyCode;
+        if (modifierCodes.indexOf(keyCode) != -1) { return; }
+        var hasModifier = e.ctrlKey || e.metaKey;
+        var key = CodeMirror.keyNames[keyCode];
+        key = specialKey[key] || key;
+        var name = '';
+        if (e.ctrlKey) { name += 'C-'; }
+        if (e.altKey) { name += 'A-'; }
+        if (mac && e.metaKey || (!hasModifier && e.shiftKey) && key.length < 2) {
+          // Shift key bindings can only specified for special characters.
+          return;
+        } else if (e.shiftKey && !/^[A-Za-z]$/.test(key)) {
+          name += 'S-';
+        }
+        if (key.length == 1) { key = key.toLowerCase(); }
+        name += key;
+        if (name.length > 1) { name = '<' + name + '>'; }
+        return name;
+      }
+      // Keys with modifiers are handled using keydown due to limitations of
+      // keypress event.
+      function handleKeyDown(cm, e) {
+        var name = lookupKey(e);
+        if (!name) { return; }
+
+        CodeMirror.signal(cm, 'vim-keypress', name);
+        if (CodeMirror.Vim.handleKey(cm, name, 'user')) {
+          CodeMirror.e_stop(e);
+        }
+      }
+      // Keys without modifiers are handled using keypress to work best with
+      // non-standard keyboard layouts.
+      function handleKeyPress(cm, e) {
+        var code = e.charCode || e.keyCode;
+        if (e.ctrlKey || e.metaKey || e.altKey ||
+            e.shiftKey && code < 32) { return; }
+        var name = String.fromCharCode(code);
+
+        CodeMirror.signal(cm, 'vim-keypress', name);
+        if (CodeMirror.Vim.handleKey(cm, name, 'user')) {
+          CodeMirror.e_stop(e);
+        }
+      }
       if (val) {
         cm.setOption('keyMap', 'vim');
         cm.setOption('disableInput', true);
@@ -16313,12 +16149,16 @@ CodeMirror.defineMIME("text/x-go", "go");
         cm.on('cursorActivity', onCursorActivity);
         maybeInitVimState(cm);
         CodeMirror.on(cm.getInputField(), 'paste', getOnPasteFn(cm));
+        cm.on('keypress', handleKeyPress);
+        cm.on('keydown', handleKeyDown);
       } else if (cm.state.vim) {
         cm.setOption('keyMap', 'default');
         cm.setOption('disableInput', false);
         cm.off('cursorActivity', onCursorActivity);
         CodeMirror.off(cm.getInputField(), 'paste', getOnPasteFn(cm));
         cm.state.vim = null;
+        cm.off('keypress', handleKeyPress);
+        cm.off('keydown', handleKeyDown);
       }
     });
     function getOnPasteFn(cm) {
@@ -16346,9 +16186,6 @@ CodeMirror.defineMIME("text/x-go", "go");
     var upperCaseAlphabet = makeKeyRange(65, 26);
     var lowerCaseAlphabet = makeKeyRange(97, 26);
     var numbers = makeKeyRange(48, 10);
-    var specialSymbols = '~`!@#$%^&*()_-+=[{}]\\|/?.,<>:;"\''.split('');
-    var specialKeys = ['Left', 'Right', 'Up', 'Down', 'Space', 'Backspace',
-        'Esc', 'Home', 'End', 'PageUp', 'PageDown', 'Enter'];
     var validMarks = [].concat(upperCaseAlphabet, lowerCaseAlphabet, numbers, ['<', '>']);
     var validRegisters = [].concat(upperCaseAlphabet, lowerCaseAlphabet, numbers, ['-', '"', '.', ':', '/']);
 
@@ -16597,6 +16434,7 @@ CodeMirror.defineMIME("text/x-go", "go");
       }
     }
 
+    var lastInsertModeKeyTimer;
     var vimApi= {
       buildKeyMap: function() {
         // TODO: Convert keymap into dictionary format for fast lookup.
@@ -16634,58 +16472,111 @@ CodeMirror.defineMIME("text/x-go", "go");
       },
       // This is the outermost function called by CodeMirror, after keys have
       // been mapped to their Vim equivalents.
-      handleKey: function(cm, key) {
-        var command;
+      handleKey: function(cm, key, origin) {
         var vim = maybeInitVimState(cm);
-        var macroModeState = vimGlobalState.macroModeState;
-        if (macroModeState.isRecording) {
-          if (key == 'q') {
-            macroModeState.exitMacroRecordMode();
+        function handleMacroRecording() {
+          var macroModeState = vimGlobalState.macroModeState;
+          if (macroModeState.isRecording) {
+            if (key == 'q') {
+              macroModeState.exitMacroRecordMode();
+              clearInputState(cm);
+              return true;
+            }
+            if (origin != 'mapping') {
+              logKey(macroModeState, key);
+            }
+          }
+        }
+        function handleEsc() {
+          if (key == '<Esc>') {
+            // Clear input state and get back to normal mode.
             clearInputState(cm);
-            return;
+            if (vim.visualMode) {
+              exitVisualMode(cm);
+            } else if (vim.insertMode) {
+              exitInsertMode(cm);
+            }
+            return true;
           }
         }
-        if (key == '<Esc>') {
-          // Clear input state and get back to normal mode.
-          clearInputState(cm);
-          if (vim.visualMode) {
-            exitVisualMode(cm);
-          }
-          return;
-        }
-        // Enter visual mode when the mouse selects text.
-        if (!vim.visualMode &&
-            !cursorEqual(cm.getCursor('head'), cm.getCursor('anchor'))) {
-          vim.visualMode = true;
-          vim.visualLine = false;
-          CodeMirror.signal(cm, "vim-mode-change", {mode: "visual"});
-          cm.on('mousedown', exitVisualMode);
-        }
-        if (key != '0' || (key == '0' && vim.inputState.getRepeat() === 0)) {
-          // Have to special case 0 since it's both a motion and a number.
-          command = commandDispatcher.matchCommand(key, defaultKeymap, vim);
-        }
-        if (!command) {
-          if (isNumber(key)) {
-            // Increment count unless count is 0 and key is 0.
-            vim.inputState.pushRepeatDigit(key);
-          }
-          if (macroModeState.isRecording) {
-            logKey(macroModeState, key);
-          }
-          return;
-        }
-        if (command.type == 'keyToKey') {
+        function doKeyToKey(keys) {
           // TODO: prevent infinite recursion.
-          for (var i = 0; i < command.toKeys.length; i++) {
-            this.handleKey(cm, command.toKeys[i]);
+          var match;
+          while (keys) {
+            // Pull off one command key, which is either a single character
+            // or a special sequence wrapped in '<' and '>', e.g. '<Space>'.
+            match = (/<\w+-.+?>|<\w+>|./).exec(keys);
+            key = match[0];
+            keys = keys.substring(match.index + key.length);
+            CodeMirror.Vim.handleKey(cm, key, 'mapping');
           }
-        } else {
-          if (macroModeState.isRecording) {
-            logKey(macroModeState, key);
-          }
-          commandDispatcher.processCommand(cm, vim, command);
         }
+
+        function handleKeyInsertMode() {
+          if (handleEsc()) { return true; }
+          var keys = vim.inputState.keyBuffer = vim.inputState.keyBuffer + key;
+          var keysAreChars = key.length == 1;
+          var match = commandDispatcher.matchCommand(keys, defaultKeymap, vim.inputState, 'insert');
+          // Need to check all key substrings in insert mode.
+          while (keys.length > 1 && match.type != 'full') {
+            var keys = vim.inputState.keyBuffer = keys.slice(1);
+            var thisMatch = commandDispatcher.matchCommand(keys, defaultKeymap, vim.inputState, 'insert');
+            if (thisMatch.type != 'none') { match = thisMatch; }
+          }
+          if (match.type == 'none') { clearInputState(cm); return false; }
+          else if (match.type == 'partial') {
+            if (lastInsertModeKeyTimer) { window.clearTimeout(lastInsertModeKeyTimer); }
+            lastInsertModeKeyTimer = window.setTimeout(
+              function() { if (vim.insertMode && vim.inputState.keyBuffer) { clearInputState(cm); } },
+              getOption('insertModeEscKeysTimeout'));
+            return !keysAreChars;
+          }
+
+          if (lastInsertModeKeyTimer) { window.clearTimeout(lastInsertModeKeyTimer); }
+          if (keysAreChars) {
+            var here = cm.getCursor();
+            cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
+          }
+          clearInputState(cm);
+          var command = match.command;
+          if (command.type == 'keyToKey') {
+            doKeyToKey(command.toKeys);
+          } else {
+            commandDispatcher.processCommand(cm, vim, command);
+          }
+          return !keysAreChars;
+        }
+
+        function handleKeyNonInsertMode() {
+          if (handleMacroRecording() || handleEsc()) { return true; };
+
+          var keys = vim.inputState.keyBuffer = vim.inputState.keyBuffer + key;
+          if (/^[1-9]\d*$/.test(keys)) { return true; }
+
+          var keysMatcher = /^(\d*)(.*)$/.exec(keys);
+          if (!keysMatcher) { clearInputState(cm); return false; }
+          var context = vim.visualMode ? 'visual' :
+                                         'normal';
+          var match = commandDispatcher.matchCommand(keysMatcher[2] || keysMatcher[1], defaultKeymap, vim.inputState, context);
+          if (match.type == 'none') { clearInputState(cm); return false; }
+          else if (match.type == 'partial') { return true; }
+
+          vim.inputState.keyBuffer = '';
+          var command = match.command;
+          var keysMatcher = /^(\d*)(.*)$/.exec(keys);
+          if (keysMatcher[1] && keysMatcher[1] != '0') {
+            vim.inputState.pushRepeatDigit(keysMatcher[1]);
+          }
+          if (command.type == 'keyToKey') {
+            doKeyToKey(command.toKeys);
+          } else {
+            commandDispatcher.processCommand(cm, vim, command);
+          }
+          return true;
+        }
+
+        if (vim.insertMode) { return handleKeyInsertMode(); }
+        else { return handleKeyNonInsertMode(); }
       },
       handleEx: function(cm, input) {
         exCommandDispatcher.processCommand(cm, input);
@@ -16902,83 +16793,25 @@ CodeMirror.defineMIME("text/x-go", "go");
       }
     };
     var commandDispatcher = {
-      matchCommand: function(key, keyMap, vim) {
-        var inputState = vim.inputState;
-        var keys = inputState.keyBuffer.concat(key);
-        var matchedCommands = [];
-        var selectedCharacter;
-        for (var i = 0; i < keyMap.length; i++) {
-          var command = keyMap[i];
-          if (matchKeysPartial(keys, command.keys)) {
-            if (inputState.operator && command.type == 'action') {
-              // Ignore matched action commands after an operator. Operators
-              // only operate on motions. This check is really for text
-              // objects since aW, a[ etcs conflicts with a.
-              continue;
-            }
-            // Match commands that take <character> as an argument.
-            if (command.keys[keys.length - 1] == 'character') {
-              selectedCharacter = keys[keys.length - 1];
-              if (selectedCharacter.length>1){
-                switch(selectedCharacter){
-                  case '<CR>':
-                    selectedCharacter='\n';
-                    break;
-                  case '<Space>':
-                    selectedCharacter=' ';
-                    break;
-                  default:
-                    continue;
-                }
-              }
-            }
-            // Add the command to the list of matched commands. Choose the best
-            // command later.
-            matchedCommands.push(command);
-          }
+      matchCommand: function(keys, keyMap, inputState, context) {
+        var matches = commandMatches(keys, keyMap, context, inputState);
+        if (!matches.full && !matches.partial) {
+          return {type: 'none'};
+        } else if (!matches.full && matches.partial) {
+          return {type: 'partial'};
         }
 
-        // Returns the command if it is a full match, or null if not.
-        function getFullyMatchedCommandOrNull(command) {
-          if (keys.length < command.keys.length) {
-            // Matches part of a multi-key command. Buffer and wait for next
-            // stroke.
-            inputState.keyBuffer.push(key);
-            return null;
-          } else {
-            if (command.keys[keys.length - 1] == 'character') {
-              inputState.selectedCharacter = selectedCharacter;
-            }
-            // Clear the buffer since a full match was found.
-            inputState.keyBuffer = [];
-            return command;
+        var bestMatch;
+        for (var i = 0; i < matches.full.length; i++) {
+          var match = matches.full[i];
+          if (!bestMatch) {
+            bestMatch = match;
           }
         }
-
-        if (!matchedCommands.length) {
-          // Clear the buffer since there were no matches.
-          inputState.keyBuffer = [];
-          return null;
-        } else if (matchedCommands.length == 1) {
-          return getFullyMatchedCommandOrNull(matchedCommands[0]);
-        } else {
-          // Find the best match in the list of matchedCommands.
-          var context = vim.visualMode ? 'visual' : 'normal';
-          var bestMatch; // Default to first in the list.
-          for (var i = 0; i < matchedCommands.length; i++) {
-            var current = matchedCommands[i];
-            if (current.context == context) {
-              bestMatch = current;
-              break;
-            } else if (!bestMatch && !current.context) {
-              // Only set an imperfect match to best match if no best match is
-              // set and the imperfect match is not restricted to another
-              // context.
-              bestMatch = current;
-            }
-          }
-          return getFullyMatchedCommandOrNull(bestMatch);
+        if (bestMatch.keys.slice(-11) == '<character>') {
+          inputState.selectedCharacter = lastChar(keys);
         }
+        return {type: 'full', command: bestMatch};
       },
       processCommand: function(cm, vim, command) {
         vim.inputState.repeatOverride = command.repeatOverride;
@@ -17533,8 +17366,8 @@ CodeMirror.defineMIME("text/x-go", "go");
 
             var equal = cursorEqual(cursor, best);
             var between = (motionArgs.forward) ?
-              cusrorIsBetween(cursor, mark, best) :
-              cusrorIsBetween(best, mark, cursor);
+              cursorIsBetween(cursor, mark, best) :
+              cursorIsBetween(best, mark, cursor);
 
             if (equal || between) {
               best = mark;
@@ -17786,7 +17619,11 @@ CodeMirror.defineMIME("text/x-go", "go");
           return null;
         }
 
-        return [tmp.start, tmp.end];
+        if (!cm.state.vim.visualMode) {
+          return [tmp.start, tmp.end];
+        } else {
+          return expandSelection(cm, tmp.start, tmp.end);
+        }
       },
 
       repeatLastCharacterSearch: function(cm, motionArgs) {
@@ -17893,10 +17730,15 @@ CodeMirror.defineMIME("text/x-go", "go");
         // including the trailing \n, include the \n before the starting line
         if (operatorArgs.linewise &&
             curEnd.line == cm.lastLine() && curStart.line == curEnd.line) {
-          var tmp = copyCursor(curEnd);
-          curStart.line--;
-          curStart.ch = lineLength(cm, curStart.line);
-          curEnd = tmp;
+          if (curEnd.line == 0) {
+            curStart.ch = 0;
+          }
+          else {
+            var tmp = copyCursor(curEnd);
+            curStart.line--;
+            curStart.ch = lineLength(cm, curStart.line);
+            curEnd = tmp;
+          }
           cm.replaceRange('', curStart, curEnd);
         } else {
           cm.replaceSelections(replacement);
@@ -18553,7 +18395,8 @@ CodeMirror.defineMIME("text/x-go", "go");
         if (vim.visualMode) {
           exitVisualMode(cm);
         }
-      }
+      },
+      exitInsertMode: exitInsertMode
     };
 
     /*
@@ -18583,14 +18426,54 @@ CodeMirror.defineMIME("text/x-go", "go");
     function offsetCursor(cur, offsetLine, offsetCh) {
       return Pos(cur.line + offsetLine, cur.ch + offsetCh);
     }
-    function matchKeysPartial(pressed, mapped) {
-      for (var i = 0; i < pressed.length; i++) {
-        // 'character' means any character. For mark, register commads, etc.
-        if (pressed[i] != mapped[i] && mapped[i] != 'character') {
-          return false;
+    function commandMatches(keys, keyMap, context, inputState) {
+      // Partial matches are not applied. They inform the key handler
+      // that the current key sequence is a subsequence of a valid key
+      // sequence, so that the key buffer is not cleared.
+      var match, partial = [], full = [];
+      for (var i = 0; i < keyMap.length; i++) {
+        var command = keyMap[i];
+        if (context == 'insert' && command.context != 'insert' ||
+            command.context && command.context != context ||
+            inputState.operator && command.type == 'action' ||
+            !(match = commandMatch(keys, command.keys))) { continue; }
+        if (match == 'partial') { partial.push(command); }
+        if (match == 'full') { full.push(command); }
+      }
+      return {
+        partial: partial.length && partial,
+        full: full.length && full
+      };
+    }
+    function commandMatch(pressed, mapped) {
+      if (mapped.slice(-11) == '<character>') {
+        // Last character matches anything.
+        var prefixLen = mapped.length - 11;
+        var pressedPrefix = pressed.slice(0, prefixLen);
+        var mappedPrefix = mapped.slice(0, prefixLen);
+        return pressedPrefix == mappedPrefix && pressed.length > prefixLen ? 'full' :
+               mappedPrefix.indexOf(pressedPrefix) == 0 ? 'partial' : false;
+      } else {
+        return pressed == mapped ? 'full' :
+               mapped.indexOf(pressed) == 0 ? 'partial' : false;
+      }
+    }
+    function lastChar(keys) {
+      var match = /^.*(<[\w\-]+>)$/.exec(keys);
+      var selectedCharacter = match ? match[1] : keys.slice(-1);
+      if (selectedCharacter.length > 1){
+        switch(selectedCharacter){
+          case '<CR>':
+            selectedCharacter='\n';
+            break;
+          case '<Space>':
+            selectedCharacter=' ';
+            break;
+          default:
+            break;
         }
       }
-      return true;
+      return selectedCharacter;
     }
     function repeatFn(cm, fn, repeat) {
       return function() {
@@ -18614,7 +18497,13 @@ CodeMirror.defineMIME("text/x-go", "go");
       }
       return false;
     }
-    function cusrorIsBetween(cur1, cur2, cur3) {
+    function cursorMin(cur1, cur2) {
+      return cursorIsBefore(cur1, cur2) ? cur1 : cur2;
+    }
+    function cursorMax(cur1, cur2) {
+      return cursorIsBefore(cur1, cur2) ? cur2 : cur1;
+    }
+    function cursorIsBetween(cur1, cur2, cur3) {
       // returns true if cur2 is between cur1 and cur3.
       var cur1before2 = cursorIsBefore(cur1, cur2);
       var cur2before3 = cursorIsBefore(cur2, cur3);
@@ -18841,6 +18730,33 @@ CodeMirror.defineMIME("text/x-go", "go");
                            'visualLine': vim.visualLine,
                            'visualBlock': block};
     }
+    function expandSelection(cm, start, end) {
+      var head = cm.getCursor('head');
+      var anchor = cm.getCursor('anchor');
+      var tmp;
+      if (cursorIsBefore(end, start)) {
+        tmp = end;
+        end = start;
+        start = tmp;
+      }
+      if (cursorIsBefore(head, anchor)) {
+        head = cursorMin(start, head);
+        anchor = cursorMax(anchor, end);
+      } else {
+        anchor = cursorMin(start, anchor);
+        head = cursorMax(head, end);
+      }
+      return [anchor, head];
+    }
+    function getHead(cm) {
+      var cur = cm.getCursor('head');
+      if (cm.getSelection().length == 1) {
+        // Small corner case when only 1 character is selected. The "real"
+        // head is the left of head and anchor.
+        cur = cursorMin(cur, cm.getCursor('anchor'));
+      }
+      return cur;
+    }
 
     function exitVisualMode(cm) {
       cm.off('mousedown', exitVisualMode);
@@ -18913,7 +18829,7 @@ CodeMirror.defineMIME("text/x-go", "go");
     }
 
     function expandWordUnderCursor(cm, inclusive, _forward, bigWord, noSymbol) {
-      var cur = cm.getCursor();
+      var cur = getHead(cm);
       var line = cm.getLine(cur.line);
       var idx = cur.ch;
 
@@ -19299,7 +19215,7 @@ CodeMirror.defineMIME("text/x-go", "go");
     // TODO: perhaps this finagling of start and end positions belonds
     // in codmirror/replaceRange?
     function selectCompanionObject(cm, symb, inclusive) {
-      var cur = cm.getCursor(), start, end;
+      var cur = getHead(cm), start, end;
 
       var bracketRegexp = ({
         '(': /[()]/, ')': /[()]/,
@@ -19344,7 +19260,7 @@ CodeMirror.defineMIME("text/x-go", "go");
     // have identical opening and closing symbols
     // TODO support across multiple lines
     function findBeginningAndEnd(cm, symb, inclusive) {
-      var cur = copyCursor(cm.getCursor());
+      var cur = copyCursor(getHead(cm));
       var line = cm.getLine(cur.line);
       var chars = line.split('');
       var start, end, i, len;
@@ -19777,6 +19693,7 @@ CodeMirror.defineMIME("text/x-go", "go");
     // shortNames must not match the prefix of the other command.
     var defaultExCommandMap = [
       { name: 'map' },
+      { name: 'imap', shortName: 'im' },
       { name: 'nmap', shortName: 'nm' },
       { name: 'vmap', shortName: 'vm' },
       { name: 'unmap' },
@@ -19831,7 +19748,7 @@ CodeMirror.defineMIME("text/x-go", "go");
             if (command.type == 'exToKey') {
               // Handle Ex to Key mapping.
               for (var i = 0; i < command.toKeys.length; i++) {
-                CodeMirror.Vim.handleKey(cm, command.toKeys[i]);
+                CodeMirror.Vim.handleKey(cm, command.toKeys[i], 'mapping');
               }
               return;
             } else if (command.type == 'exToEx') {
@@ -19955,7 +19872,7 @@ CodeMirror.defineMIME("text/x-go", "go");
             this.commandMap_[commandName] = {
               name: commandName,
               type: 'exToKey',
-              toKeys: parseKeyString(rhs),
+              toKeys: rhs,
               user: true
             };
           }
@@ -19963,7 +19880,7 @@ CodeMirror.defineMIME("text/x-go", "go");
           if (rhs != ':' && rhs.charAt(0) == ':') {
             // Key to Ex mapping.
             var mapping = {
-              keys: parseKeyString(lhs),
+              keys: lhs,
               type: 'keyToEx',
               exArgs: { input: rhs.substring(1) },
               user: true};
@@ -19972,9 +19889,9 @@ CodeMirror.defineMIME("text/x-go", "go");
           } else {
             // Key to key mapping
             var mapping = {
-              keys: parseKeyString(lhs),
+              keys: lhs,
               type: 'keyToKey',
-              toKeys: parseKeyString(rhs),
+              toKeys: rhs,
               user: true
             };
             if (ctx) { mapping.context = ctx; }
@@ -19983,15 +19900,6 @@ CodeMirror.defineMIME("text/x-go", "go");
         }
       },
       unmap: function(lhs, ctx) {
-        var arrayEquals = function(a, b) {
-          if (a === b) return true;
-          if (a == null || b == null) return true;
-          if (a.length != b.length) return false;
-          for (var i = 0; i < a.length; i++) {
-            if (a[i] !== b[i]) return false;
-          }
-          return true;
-        };
         if (lhs != ':' && lhs.charAt(0) == ':') {
           // Ex to Ex or Ex to key mapping
           if (ctx) { throw Error('Mode not supported for ex mappings'); }
@@ -20002,9 +19910,9 @@ CodeMirror.defineMIME("text/x-go", "go");
           }
         } else {
           // Key to Ex or key to key mapping
-          var keys = parseKeyString(lhs);
+          var keys = lhs;
           for (var i = 0; i < defaultKeymap.length; i++) {
-            if (arrayEquals(keys, defaultKeymap[i].keys)
+            if (keys == defaultKeymap[i].keys
                 && defaultKeymap[i].context === ctx
                 && defaultKeymap[i].user) {
               defaultKeymap.splice(i, 1);
@@ -20015,21 +19923,6 @@ CodeMirror.defineMIME("text/x-go", "go");
         throw Error('No such mapping.');
       }
     };
-
-    // Converts a key string sequence of the form a<C-w>bd<Left> into Vim's
-    // keymap representation.
-    function parseKeyString(str) {
-      var key, match;
-      var keys = [];
-      while (str) {
-        match = (/<\w+-.+?>|<\w+>|./).exec(str);
-        if (match === null)break;
-        key = match[0];
-        str = str.substring(match.index + key.length);
-        keys.push(key);
-      }
-      return keys;
-    }
 
     var exCommands = {
       map: function(cm, params, ctx) {
@@ -20042,6 +19935,7 @@ CodeMirror.defineMIME("text/x-go", "go");
         }
         exCommandDispatcher.map(mapArgs[0], mapArgs[1], ctx);
       },
+      imap: function(cm, params) { this.map(cm, params, 'insert'); },
       nmap: function(cm, params) { this.map(cm, params, 'normal'); },
       vmap: function(cm, params) { this.map(cm, params, 'visual'); },
       unmap: function(cm, params, ctx) {
@@ -20523,65 +20417,10 @@ CodeMirror.defineMIME("text/x-go", "go");
       });
     }
 
-    // Register Vim with CodeMirror
-    function buildVimKeyMap() {
-      /**
-       * Handle the raw key event from CodeMirror. Translate the
-       * Shift + key modifier to the resulting letter, while preserving other
-       * modifers.
-       */
-      function cmKeyToVimKey(key, modifier) {
-        var vimKey = key;
-        if (isUpperCase(vimKey) && modifier == 'Ctrl') {
-            vimKey = vimKey.toLowerCase();
-        }
-        if (modifier) {
-          // Vim will parse modifier+key combination as a single key.
-          vimKey = modifier.charAt(0) + '-' + vimKey;
-        }
-        var specialKey = ({Enter:'CR',Backspace:'BS',Delete:'Del'})[vimKey];
-        vimKey = specialKey ? specialKey : vimKey;
-        vimKey = vimKey.length > 1 ? '<'+ vimKey + '>' : vimKey;
-        return vimKey;
-      }
-
-      // Closure to bind CodeMirror, key, modifier.
-      function keyMapper(vimKey) {
-        return function(cm) {
-          CodeMirror.signal(cm, 'vim-keypress', vimKey);
-          CodeMirror.Vim.handleKey(cm, vimKey);
-        };
-      }
-
-      var cmToVimKeymap = {
+    CodeMirror.keyMap.vim = {
         'nofallthrough': true,
         'style': 'fat-cursor'
       };
-      function bindKeys(keys, modifier) {
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-          if (!modifier && key.length == 1) {
-            // Wrap all keys without modifiers with '' to identify them by their
-            // key characters instead of key identifiers.
-            key = "'" + key + "'";
-          }
-          var vimKey = cmKeyToVimKey(keys[i], modifier);
-          var cmKey = modifier ? modifier + '-' + key : key;
-          cmToVimKeymap[cmKey] = keyMapper(vimKey);
-        }
-      }
-      bindKeys(upperCaseAlphabet);
-      bindKeys(lowerCaseAlphabet);
-      bindKeys(upperCaseAlphabet, 'Ctrl');
-      bindKeys(specialSymbols);
-      bindKeys(specialSymbols, 'Ctrl');
-      bindKeys(numbers);
-      bindKeys(numbers, 'Ctrl');
-      bindKeys(specialKeys);
-      bindKeys(specialKeys, 'Ctrl');
-      return cmToVimKeymap;
-    }
-    CodeMirror.keyMap.vim = buildVimKeyMap();
 
     function exitInsertMode(cm) {
       var vim = cm.state.vim;
@@ -20637,63 +20476,13 @@ CodeMirror.defineMIME("text/x-go", "go");
       }
     }
 
-    defineOption('enableInsertModeEscKeys', false, 'boolean');
-    // Use this option to customize the two-character ESC keymap.
-    // If you want to use characters other than i j or k you'll have to add
-    // lines to the vim-insert and await-second keymaps later in this file.
-    defineOption('insertModeEscKeys', 'kj', 'string');
     // The timeout in milliseconds for the two-character ESC keymap should be
     // adjusted according to your typing speed to prevent false positives.
     defineOption('insertModeEscKeysTimeout', 200, 'number');
-    function firstEscCharacterHandler(ch) {
-      return function(cm){
-        var keys = getOption('insertModeEscKeys');
-        var firstEscCharacter = keys && keys.length > 1 && keys.charAt(0);
-        if (!getOption('enableInsertModeEscKeys')|| firstEscCharacter !== ch) {
-          return CodeMirror.Pass;
-        } else {
-          cm.replaceRange(ch, cm.getCursor(), cm.getCursor(), "+input");
-          cm.setOption('keyMap', 'await-second');
-          cm.state.vim.awaitingEscapeSecondCharacter = true;
-          setTimeout(
-              function(){
-                if(cm.state.vim.awaitingEscapeSecondCharacter) {
-                    cm.state.vim.awaitingEscapeSecondCharacter = false;
-                    cm.setOption('keyMap', 'vim-insert');
-                }
-              },
-              getOption('insertModeEscKeysTimeout'));
-        }
-      };
-    }
-    function secondEscCharacterHandler(ch){
-      return function(cm) {
-        var keys = getOption('insertModeEscKeys');
-        var secondEscCharacter = keys && keys.length > 1 && keys.charAt(1);
-        if (!getOption('enableInsertModeEscKeys')|| secondEscCharacter !== ch) {
-          return CodeMirror.Pass;
-          // This is not the handler you're looking for. Just insert as usual.
-        } else {
-          if (cm.state.vim.insertMode) {
-            var lastChange = vimGlobalState.macroModeState.lastInsertModeChanges;
-            if (lastChange && lastChange.changes.length) {
-              lastChange.changes.pop();
-            }
-          }
-          cm.state.vim.awaitingEscapeSecondCharacter = false;
-          cm.replaceRange('', {ch: cm.getCursor().ch - 1, line: cm.getCursor().line},
-                          cm.getCursor(), "+input");
-          exitInsertMode(cm);
-        }
-      };
-    }
 
     CodeMirror.keyMap['vim-insert'] = {
       // TODO: override navigation keys so that Esc will cancel automatic
       // indentation from o, O, i_<CR>
-      'Esc': exitInsertMode,
-      'Ctrl-[': exitInsertMode,
-      'Ctrl-C': exitInsertMode,
       'Ctrl-N': 'autocomplete',
       'Ctrl-P': 'autocomplete',
       'Enter': function(cm) {
@@ -20701,20 +20490,10 @@ CodeMirror.defineMIME("text/x-go", "go");
             CodeMirror.commands.newlineAndIndent;
         fn(cm);
       },
-      // The next few lines are where you'd add additional handlers if
-      // you wanted to use keys other than i j and k for two-character
-      // escape sequences. Don't forget to add them in the await-second
-      // section as well.
-      "'i'": firstEscCharacterHandler('i'),
-      "'j'": firstEscCharacterHandler('j'),
-      "'k'": firstEscCharacterHandler('k'),
       fallthrough: ['default']
     };
 
     CodeMirror.keyMap['await-second'] = {
-      "'i'": secondEscCharacterHandler('i'),
-      "'j'": secondEscCharacterHandler('j'),
-      "'k'": secondEscCharacterHandler('k'),
       fallthrough: ['vim-insert']
     };
 
@@ -20738,7 +20517,7 @@ CodeMirror.defineMIME("text/x-go", "go");
           match = (/<\w+-.+?>|<\w+>|./).exec(text);
           key = match[0];
           text = text.substring(match.index + key.length);
-          CodeMirror.Vim.handleKey(cm, key);
+          CodeMirror.Vim.handleKey(cm, key, 'macro');
           if (vim.insertMode) {
             var changes = register.insertModeChanges[imc++].changes;
             vimGlobalState.macroModeState.lastInsertModeChanges.changes =
@@ -20818,10 +20597,7 @@ CodeMirror.defineMIME("text/x-go", "go");
       } else if (cm.doc.history.lastSelOrigin == '*mouse') {
         // Reset lastHPos if mouse click was done in normal mode.
         vim.lastHPos = cm.doc.getCursor().ch;
-        if (cm.somethingSelected()) {
-          // If something is still selected, enter visual mode.
-          vim.visualMode = true;
-        }
+        handleExternalSelection(cm, vim);
       }
       if (vim.visualMode) {
         var from, head;
@@ -20837,6 +20613,22 @@ CodeMirror.defineMIME("text/x-go", "go");
           vim.fakeCursor.clear();
         }
         vim.fakeCursor = cm.markText(from, to, {className: 'cm-animate-fat-cursor'});
+      }
+    }
+
+    function handleExternalSelection(cm, vim) {
+      var anchor = cm.getCursor('anchor');
+      var head = cm.getCursor('head');
+      // Enter visual mode when the mouse selects text.
+      if (!vim.visualMode && !vim.insertMode && cm.somethingSelected()) {
+        vim.visualMode = true;
+        vim.visualLine = false;
+        CodeMirror.signal(cm, "vim-mode-change", {mode: "visual"});
+        cm.on('mousedown', exitVisualMode);
+      }
+      if (vim.visualMode) {
+        updateMark(cm, vim, '<', cursorMin(head, anchor));
+        updateMark(cm, vim, '>', cursorMax(head, anchor));
       }
     }
 
@@ -20963,11 +20755,10 @@ CodeMirror.defineMIME("text/x-go", "go");
   // Initialize Vim and make it available as an API.
   CodeMirror.Vim = Vim();
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -21509,11 +21300,10 @@ CodeMirror.defineMIME("text/x-go", "go");
   map["Shift-F3"] = "findPrev";
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN keymap-krx.js
+// BEGIN //rawgit.com/TristanCavelier/texteditor/master/keymap-krx.js
 /*jslint indent: 2 */
 (function (root) {
   "use strict";
@@ -21877,11 +21667,10 @@ CodeMirror.defineMIME("text/x-go", "go");
   CodeMirror.keyMap.krx["Shift-Ctrl--"] = "undo";
 
 }(this));
-// END keymap-krx.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/texteditor/master/keymap-krx.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -21940,7 +21729,10 @@ CodeMirror.defineMIME("text/x-go", "go");
 
     var inp = dialog.getElementsByTagName("input")[0], button;
     if (inp) {
-      if (options.value) inp.value = options.value;
+      if (options.value) {
+        inp.value = options.value;
+        inp.select();
+      }
 
       if (options.onInput)
         CodeMirror.on(inp, "input", function(e) { options.onInput(e, inp.value, close);});
@@ -22034,11 +21826,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     return close;
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/display/fullscreen.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/display/fullscreen.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22080,11 +21871,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     cm.refresh();
   }
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/display/fullscreen.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/display/fullscreen.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/edit/matchbrackets.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/edit/matchbrackets.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22205,11 +21995,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     return scanForBracket(this, pos, dir, style, config);
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/edit/matchbrackets.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/edit/matchbrackets.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/edit/closebrackets.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/edit/closebrackets.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22290,24 +22079,25 @@ CodeMirror.defineMIME("text/x-go", "go");
         for (var i = 0; i < ranges.length; i++) {
           var range = ranges[i], cur = range.head, curType;
           var next = cm.getRange(cur, Pos(cur.line, cur.ch + 1));
-          if (!range.empty())
+          if (!range.empty()) {
             curType = "surround";
-          else if (left == right && next == right) {
+          } else if (left == right && next == right) {
             if (cm.getRange(cur, Pos(cur.line, cur.ch + 3)) == left + left + left)
               curType = "skipThree";
             else
               curType = "skip";
           } else if (left == right && cur.ch > 1 &&
                      cm.getRange(Pos(cur.line, cur.ch - 2), cur) == left + left &&
-                     (cur.ch <= 2 || cm.getRange(Pos(cur.line, cur.ch - 3), Pos(cur.line, cur.ch - 2)) != left))
+                     (cur.ch <= 2 || cm.getRange(Pos(cur.line, cur.ch - 3), Pos(cur.line, cur.ch - 2)) != left)) {
             curType = "addFour";
-          else if (left == '"' || left == "'") {
+          } else if (left == '"' || left == "'") {
             if (!CodeMirror.isWordChar(next) && enteringString(cm, cur, left)) curType = "both";
             else return CodeMirror.Pass;
-          } else if (cm.getLine(cur.line).length == cur.ch || closingBrackets.indexOf(next) >= 0 || SPACE_CHAR_REGEX.test(next))
+          } else if (cm.getLine(cur.line).length == cur.ch || closingBrackets.indexOf(next) >= 0 || SPACE_CHAR_REGEX.test(next)) {
             curType = "both";
-          else
+          } else {
             return CodeMirror.Pass;
+          }
           if (!type) type = curType;
           else if (type != curType) return CodeMirror.Pass;
         }
@@ -22368,11 +22158,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     };
   }
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/edit/closebrackets.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/edit/closebrackets.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/edit/trailingspace.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/edit/trailingspace.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22400,11 +22189,10 @@ CodeMirror.defineMIME("text/x-go", "go");
       });
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/edit/trailingspace.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/edit/trailingspace.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/search/searchcursor.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/search/searchcursor.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22594,11 +22382,10 @@ CodeMirror.defineMIME("text/x-go", "go");
       this.setSelections(ranges, 0);
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/search/searchcursor.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/search/searchcursor.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/search/search.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/search/search.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22758,11 +22545,10 @@ CodeMirror.defineMIME("text/x-go", "go");
   CodeMirror.commands.replace = replace;
   CodeMirror.commands.replaceAll = function(cm) {replace(cm, true);};
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/search/search.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/search/search.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/search/match-highlighter.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/search/match-highlighter.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -22891,11 +22677,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     }};
   }
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/search/match-highlighter.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/search/match-highlighter.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/comment/comment.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/comment/comment.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -23079,11 +22864,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     return true;
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/comment/comment.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/comment/comment.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/lint/lint.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/lint/lint.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -23288,11 +23072,10 @@ CodeMirror.defineMIME("text/x-go", "go");
     }
   });
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/lint/lint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/lint/lint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/douglascrockford/JSLint/master/jslint.js
+// BEGIN //rawgit.com/douglascrockford/JSLint/master/jslint.js
 // jslint.js
 // 2014-07-08
 
@@ -27581,11 +27364,14 @@ klass:              do {
 
     return itself;
 }());
-// END http://rawgit.com/douglascrockford/JSLint/master/jslint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/douglascrockford/JSLint/master/jslint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/lint/javascript-lint.js
+// BEGIN
+var JSHINT = JSLINT;
+// END
+////////////////////////////////////////////////////////////////////////////////
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/lint/javascript-lint.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -27722,11 +27508,10 @@ klass:              do {
     }
   }
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/lint/javascript-lint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/lint/javascript-lint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/stubbornella/csslint/master/release/csslint.js
+// BEGIN //rawgit.com/stubbornella/csslint/master/release/csslint.js
 /*!
 CSSLint
 Copyright (c) 2013 Nicole Sullivan and Nicholas C. Zakas. All rights reserved.
@@ -36985,11 +36770,10 @@ CSSLint.addFormatter({
     }
 });
 return CSSLint;
-})();// END http://rawgit.com/stubbornella/csslint/master/release/csslint.js
+})();
+// END //rawgit.com/stubbornella/csslint/master/release/csslint.js
 ////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/lint/css-lint.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/lint/css-lint.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -37025,11 +36809,10 @@ CodeMirror.registerHelper("lint", "css", function(text) {
 });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/lint/css-lint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/lint/css-lint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/zaach/jsonlint/79b553fb65c192add9066da64043458981b3972b/lib/jsonlint.js
+// BEGIN //rawgit.com/zaach/jsonlint/79b553fb65c192add9066da64043458981b3972b/lib/jsonlint.js
 /* Jison generated parser */
 var jsonlint = (function(){
 var parser = {trace: function trace() { },
@@ -37461,11 +37244,10 @@ exports.main = function commonjsMain(args) {
 if (typeof module !== 'undefined' && require.main === module) {
   exports.main(typeof process !== 'undefined' ? process.argv.slice(1) : require("system").args);
 }
-}// END http://rawgit.com/zaach/jsonlint/79b553fb65c192add9066da64043458981b3972b/lib/jsonlint.js
+}
+// END //rawgit.com/zaach/jsonlint/79b553fb65c192add9066da64043458981b3972b/lib/jsonlint.js
 ////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/lint/json-lint.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/lint/json-lint.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -37497,11 +37279,10 @@ CodeMirror.registerHelper("lint", "json", function(text) {
 });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/lint/json-lint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/lint/json-lint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/lint/yaml-lint.js
+// BEGIN //rawgit.com/marijnh/CodeMirror/master/addon/lint/yaml-lint.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
@@ -37530,11 +37311,10 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
 });
 
 });
-// END http://rawgit.com/marijnh/CodeMirror/master/addon/lint/yaml-lint.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/marijnh/CodeMirror/master/addon/lint/yaml-lint.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN base64.js
+// BEGIN //rawgit.com/TristanCavelier/texteditor/master/base64.js
 /*jslint indent: 2 */
 
 (function factory(root) {
@@ -37829,11 +37609,10 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
   root.base64 = base64;
 
 }(this));
-// END base64.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/texteditor/master/base64.js
 ////////////////////////////////////////////////////////////////////////////////
-// BEGIN ui.js
+// BEGIN //rawgit.com/TristanCavelier/texteditor/master/ui.js
 /*jslint indent: 2 */
 (function (root) {
   "use strict";
@@ -37885,8 +37664,6 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
   // - base64
   // - JSLint (or JSHint)
 
-  if (root.JSLint) { root.JSHint = root.JSLint; }
-
   function randomChoose(array) {
     return array[parseInt(Math.random() * array.length, 10)];
   }
@@ -37936,6 +37713,30 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
     elEditor.__saving = root.setTimeout(updateTextArea, 200);
   }
 
+  /**
+   * Allows the user to download `data` as a file which name is defined by
+   * `filename`. The `mimetype` will help the browser to choose the associated
+   * application to open with.
+   *
+   * @param  {String} filename The file name.
+   * @param  {String} mimetype The data type.
+   * @param  {Any} data The data to download.
+   */
+  function downloadAs(filename, mimetype, data) {
+    data = window.URL.createObjectURL(new Blob([data], {"type": mimetype}));
+    var a = document.createElement("a");
+    if (a.download !== undefined) {
+      a.download = filename;
+      a.href = data;
+      //a.textContent = 'Downloading...';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } else {
+      window.open(data);
+    }
+  }
+
   var funs = {
     "help doc": "Shows this help",
     help: function () {
@@ -37982,6 +37783,11 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
       storage.put(url, new root.Blob([cm.getValue()])).then(function () {
         root.alert("Saved as " + url);
       }, alertAndThrow);
+    },
+    download: function (cm) {
+      var filename = root.prompt("Filename:");
+      if (!filename) { return root.alert("Empty filename, aborting."); }
+      downloadAs(filename, "application/octet-stream", cm.getValue())
     },
     "mode doc": "{javascript|xml|htmlmixed|...}",
     mode: function (cm, args) {
@@ -38155,6 +37961,5 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
   });
 
 }(this));
-// END ui.js
-////////////////////////////////////////////////////////////////////////////////
 
+// END //rawgit.com/TristanCavelier/texteditor/master/ui.js
