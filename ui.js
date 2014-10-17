@@ -98,6 +98,30 @@
     elEditor.__saving = root.setTimeout(updateTextArea, 200);
   }
 
+  /**
+   * Allows the user to download `data` as a file which name is defined by
+   * `filename`. The `mimetype` will help the browser to choose the associated
+   * application to open with.
+   *
+   * @param  {String} filename The file name.
+   * @param  {String} mimetype The data type.
+   * @param  {Any} data The data to download.
+   */
+  function downloadAs(filename, mimetype, data) {
+    data = window.URL.createObjectURL(new Blob([data], {"type": mimetype}));
+    var a = document.createElement("a");
+    if (a.download !== undefined) {
+      a.download = filename;
+      a.href = data;
+      //a.textContent = 'Downloading...';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } else {
+      window.open(data);
+    }
+  }
+
   var funs = {
     "help doc": "Shows this help",
     help: function () {
@@ -144,6 +168,11 @@
       storage.put(url, new root.Blob([cm.getValue()])).then(function () {
         root.alert("Saved as " + url);
       }, alertAndThrow);
+    },
+    download: function (cm) {
+      var filename = root.prompt("Filename:");
+      if (!filename) { return root.alert("Empty filename, aborting."); }
+      downloadAs(filename, "application/octet-stream", cm.getValue())
     },
     "mode doc": "{javascript|xml|htmlmixed|...}",
     mode: function (cm, args) {
