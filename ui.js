@@ -49,8 +49,6 @@
   // - base64
   // - JSLint (or JSHint)
 
-  if (root.JSLint) { root.JSHint = root.JSLint; }
-
   function randomChoose(array) {
     return array[parseInt(Math.random() * array.length, 10)];
   }
