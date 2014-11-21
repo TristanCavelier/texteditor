@@ -122,6 +122,15 @@
     }
   }
 
+  function commandPrompt(cm) {
+    // XXX allow the use of space character (like in bash interpreter)
+    var text = root.prompt("Command (type `help` to get a list of commands)"), args;
+    if (text) {
+      args = text.split(" ");
+      funs[args[0]](cm, args);
+    }
+  }
+
   var funs = {
     "help doc": "Shows this help",
     help: function () {
@@ -275,16 +284,10 @@
       showCursorWhenSelecting: true,
 
       extraKeys: {
-        // "Alt-X": function (cm) {
-        // "Alt-F12": function (cm) {
-        "Alt-P": function (cm) {
-          // XXX allow the use of space character (like in bash interpreter)
-          var text = root.prompt("Command (type `help` to get a list of commands)"), args;
-          if (text) {
-            args = text.split(" ");
-            funs[args[0]](cm, args);
-          }
-        },
+        "Alt-;": commandPrompt,
+        "Alt-:": commandPrompt,
+        "Shift-Alt-;": commandPrompt,
+        "Shift-Alt-:": commandPrompt,
         "Ctrl-O": function (cm) {
           root.setTimeout(funs.loadpath, 0, cm, ["loadpath"]);
         },
