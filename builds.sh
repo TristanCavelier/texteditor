@@ -88,6 +88,7 @@ js http://rawgit.com/marijnh/CodeMirror/master/keymap/emacs.js
 js http://rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
 js http://rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
 js http://rawgit.com/TristanCavelier/texteditor/master/keymap-krx.js
+js http://rawgit.com/TristanCavelier/texteditor/master/keymap-debug.js
 
 js http://rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
 css http://rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.css
