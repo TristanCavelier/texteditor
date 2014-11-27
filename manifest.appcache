@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# Version 0.1.0-6
+# Version 0.1.1-1
 
 #
 # A list of the resources that browsers should cache to have
@@ -81,6 +81,7 @@ index.html
 //rawgit.com/marijnh/CodeMirror/master/keymap/vim.js
 //rawgit.com/marijnh/CodeMirror/master/keymap/sublime.js
 keymap-krx.js
+keymap-debug.js
 
 //rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.css
 //rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
