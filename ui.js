@@ -87,17 +87,6 @@
   var elEditor = null;
   var cmEditor = null;
 
-  function updateTextArea() {
-    root.clearTimeout(elEditor.__saving);
-    delete elEditor.__saving;
-    elEditor.value = cmEditor.getValue();
-  }
-
-  function delayedUpdateTextArea() {
-    root.clearTimeout(elEditor.__saving);
-    elEditor.__saving = root.setTimeout(updateTextArea, 200);
-  }
-
   /**
    * Allows the user to download `data` as a file which name is defined by
    * `filename`. The `mimetype` will help the browser to choose the associated
@@ -255,7 +244,6 @@
   //////////////////////////////////////////////////////////////////////
 
   root.CodeMirror.commands.save = function (cm) {
-    updateTextArea();
     funs.save(cm, ["save"]);
   };
 
@@ -295,12 +283,10 @@
           root.setTimeout(funs.load, 0, cm, ["load"]);
         },
         // "Ctrl-S": function (cm) {
-        //   updateTextArea();
         //   funs.save(cm, ["save"]);
         // },
         "Shift-Ctrl-S": function (cm) {
           funs["remove-trailing-spaces"](cm, ["remove-trailing-spaces"]);
-          updateTextArea();
           funs.save(cm, ["save"]);
         }
       },
@@ -318,8 +304,6 @@
       theme: "rubyblue", // default "default"
       mode: "text"
     });
-
-    cmEditor.on("change", delayedUpdateTextArea);
 
     root.setTimeout(function () {
       try {
@@ -347,5 +331,7 @@
       }
     });
   });
+
+  root.editor = cmEditor;
 
 }(this));
