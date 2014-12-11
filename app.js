@@ -1252,6 +1252,7 @@
     if (options.lineWrapping)
       this.display.wrapper.className += " CodeMirror-wrap";
     if (options.autofocus && !mobile) focusInput(this);
+    initScrollbars(this);
 
     this.state = {
       keyMaps: [],  // stores maps added by addKeyMap
@@ -1312,14 +1313,13 @@
 
     // Wraps and hides input textarea
     d.inputDiv = elt("div", [input], null, "overflow: hidden; position: relative; width: 3px; height: 0px;");
-    // The fake scrollbar elements.
-    d.scrollbarH = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar");
-    d.scrollbarV = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar");
     // Covers bottom-right square when both scrollbars are present.
     d.scrollbarFiller = elt("div", null, "CodeMirror-scrollbar-filler");
+    d.scrollbarFiller.setAttribute("not-content", "true");
     // Covers bottom of gutter when coverGutterNextToScrollbar is on
     // and h scrollbar is present.
     d.gutterFiller = elt("div", null, "CodeMirror-gutter-filler");
+    d.gutterFiller.setAttribute("not-content", "true");
     // Will contain the actual code, positioned to cover the viewport.
     d.lineDiv = elt("div", null, "CodeMirror-code");
     // Elements are added to these to represent selection and cursors.
@@ -1336,10 +1336,11 @@
     d.mover = elt("div", [elt("div", [d.lineSpace], "CodeMirror-lines")], null, "position: relative");
     // Set to the height of the document, allowing scrolling.
     d.sizer = elt("div", [d.mover], "CodeMirror-sizer");
+    d.sizerWidth = null;
     // Behavior of elts with overflow: auto and padding is
     // inconsistent across browsers. This is used to ensure the
     // scrollable area is big enough.
-    d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerCutOff + "px; width: 1px;");
+    d.heightForcer = elt("div", null, null, "position: absolute; height: " + scrollerGap + "px; width: 1px;");
     // Will contain the gutters, if any.
     d.gutters = elt("div", null, "CodeMirror-gutters");
     d.lineGutter = null;
@@ -1347,8 +1348,7 @@
     d.scroller = elt("div", [d.sizer, d.heightForcer, d.gutters], "CodeMirror-scroll");
     d.scroller.setAttribute("tabIndex", "-1");
     // The element in which the editor lives.
-    d.wrapper = elt("div", [d.inputDiv, d.scrollbarH, d.scrollbarV,
-                            d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
+    d.wrapper = elt("div", [d.inputDiv, d.scrollbarFiller, d.gutterFiller, d.scroller], "CodeMirror");
 
     // Work around IE7 z-index bug (not perfect, hence IE7 not really being supported)
     if (ie && ie_version < 8) { d.gutters.style.zIndex = -1; d.scroller.style.paddingRight = 0; }
@@ -1357,8 +1357,6 @@
     if (!webkit) d.scroller.draggable = true;
     // Needed to handle Tab key in KHTML
     if (khtml) { d.inputDiv.style.height = "1px"; d.inputDiv.style.position = "absolute"; }
-    // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
-    if (ie && ie_version < 8) d.scrollbarH.style.minHeight = d.scrollbarV.style.minWidth = "18px";
 
     if (place) {
       if (place.appendChild) place.appendChild(d.wrapper);
@@ -1367,6 +1365,7 @@
 
     // Current rendered range (may be bigger than the view window).
     d.viewFrom = d.viewTo = doc.first;
+    d.reportedViewFrom = d.reportedViewTo = doc.first;
     // Information about the rendered lines.
     d.view = [];
     // Holds info about a single rendered line when it was rendered
@@ -1376,6 +1375,9 @@
     d.viewOffset = 0;
     d.lastWrapHeight = d.lastWrapWidth = 0;
     d.updateLineNumbers = null;
+
+    d.nativeBarWidth = d.barHeight = d.barWidth = 0;
+    d.scrollbarsClipped = false;
 
     // Used to only resize the line number gutter when necessary (when
     // the amount of lines crosses a boundary that makes its width change)
@@ -1440,6 +1442,7 @@
     if (cm.options.lineWrapping) {
       addClass(cm.display.wrapper, "CodeMirror-wrap");
       cm.display.sizer.style.minWidth = "";
+      cm.display.sizerWidth = null;
     } else {
       rmClass(cm.display.wrapper, "CodeMirror-wrap");
       findMaxLine(cm);
@@ -1511,7 +1514,6 @@
   function updateGutterSpace(cm) {
     var width = cm.display.gutters.offsetWidth;
     cm.display.sizer.style.marginLeft = width + "px";
-    cm.display.scrollbarH.style.left = cm.options.fixedGutter ? width + "px" : 0;
   }
 
   // Compute the character length of a line, taking into account
@@ -1564,78 +1566,166 @@
 
   // SCROLLBARS
 
-  function hScrollbarTakesSpace(cm) {
-    return cm.display.scroller.clientHeight - cm.display.wrapper.clientHeight < scrollerCutOff - 3;
-  }
-
   // Prepare DOM reads needed to update the scrollbars. Done in one
   // shot to minimize update/measure roundtrips.
   function measureForScrollbars(cm) {
-    var scroll = cm.display.scroller;
+    var d = cm.display, gutterW = d.gutters.offsetWidth;
+    var docH = Math.round(cm.doc.height + paddingVert(cm.display));
     return {
-      clientHeight: scroll.clientHeight,
-      barHeight: cm.display.scrollbarV.clientHeight,
-      scrollWidth: scroll.scrollWidth, clientWidth: scroll.clientWidth,
-      hScrollbarTakesSpace: hScrollbarTakesSpace(cm),
-      barWidth: cm.display.scrollbarH.clientWidth,
-      docHeight: Math.round(cm.doc.height + paddingVert(cm.display))
+      clientHeight: d.scroller.clientHeight,
+      viewHeight: d.wrapper.clientHeight,
+      scrollWidth: d.scroller.scrollWidth, clientWidth: d.scroller.clientWidth,
+      viewWidth: d.wrapper.clientWidth,
+      barLeft: cm.options.fixedGutter ? gutterW : 0,
+      docHeight: docH,
+      scrollHeight: docH + scrollGap(cm) + d.barHeight,
+      nativeBarWidth: d.nativeBarWidth,
+      gutterWidth: gutterW
     };
+  }
+
+  function NativeScrollbars(place, scroll, cm) {
+    this.cm = cm;
+    var vert = this.vert = elt("div", [elt("div", null, null, "min-width: 1px")], "CodeMirror-vscrollbar");
+    var horiz = this.horiz = elt("div", [elt("div", null, null, "height: 100%; min-height: 1px")], "CodeMirror-hscrollbar");
+    place(vert); place(horiz);
+
+    on(vert, "scroll", function() {
+      if (vert.clientHeight) scroll(vert.scrollTop, "vertical");
+    });
+    on(horiz, "scroll", function() {
+      if (horiz.clientWidth) scroll(horiz.scrollLeft, "horizontal");
+    });
+
+    this.checkedOverlay = false;
+    // Need to set a minimum width to see the scrollbar on IE7 (but must not set it on IE8).
+    if (ie && ie_version < 8) this.horiz.style.minHeight = this.vert.style.minWidth = "18px";
+  }
+
+  NativeScrollbars.prototype = copyObj({
+    update: function(measure) {
+      var needsH = measure.scrollWidth > measure.clientWidth + 1;
+      var needsV = measure.scrollHeight > measure.clientHeight + 1;
+      var sWidth = measure.nativeBarWidth;
+
+      if (needsV) {
+        this.vert.style.display = "block";
+        this.vert.style.bottom = needsH ? sWidth + "px" : "0";
+        var totalHeight = measure.viewHeight - (needsH ? sWidth : 0);
+        // A bug in IE8 can cause this value to be negative, so guard it.
+        this.vert.firstChild.style.height =
+          Math.max(0, measure.scrollHeight - measure.clientHeight + totalHeight) + "px";
+      } else {
+        this.vert.style.display = "";
+        this.vert.firstChild.style.height = "0";
+      }
+
+      if (needsH) {
+        this.horiz.style.display = "block";
+        this.horiz.style.right = needsV ? sWidth + "px" : "0";
+        this.horiz.style.left = measure.barLeft + "px";
+        var totalWidth = measure.viewWidth - measure.barLeft - (needsV ? sWidth : 0);
+        this.horiz.firstChild.style.width =
+          (measure.scrollWidth - measure.clientWidth + totalWidth) + "px";
+      } else {
+        this.horiz.style.display = "";
+        this.horiz.firstChild.style.width = "0";
+      }
+
+      if (!this.checkedOverlay && measure.clientHeight > 0) {
+        if (sWidth == 0) this.overlayHack();
+        this.checkedOverlay = true;
+      }
+
+      return {right: needsV ? sWidth : 0, bottom: needsH ? sWidth : 0};
+    },
+    setScrollLeft: function(pos) {
+      if (this.horiz.scrollLeft != pos) this.horiz.scrollLeft = pos;
+    },
+    setScrollTop: function(pos) {
+      if (this.vert.scrollTop != pos) this.vert.scrollTop = pos;
+    },
+    overlayHack: function() {
+      var w = mac && !mac_geMountainLion ? "12px" : "18px";
+      this.horiz.style.minWidth = this.vert.style.minHeight = w;
+      var self = this;
+      var barMouseDown = function(e) {
+        if (e_target(e) != self.vert && e_target(e) != self.horiz)
+          operation(self.cm, onMouseDown)(e);
+      };
+      on(this.vert, "mousedown", barMouseDown);
+      on(this.horiz, "mousedown", barMouseDown);
+    },
+    clear: function() {
+      var parent = this.horiz.parentNode;
+      parent.removeChild(this.horiz);
+      parent.removeChild(this.vert);
+    }
+  }, NativeScrollbars.prototype);
+
+  function NullScrollbars() {}
+
+  NullScrollbars.prototype = copyObj({
+    update: function() { return {bottom: 0, right: 0}; },
+    setScrollLeft: function() {},
+    setScrollTop: function() {},
+    clear: function() {}
+  }, NullScrollbars.prototype);
+
+  CodeMirror.scrollbarModel = {"native": NativeScrollbars, "null": NullScrollbars};
+
+  function initScrollbars(cm) {
+    if (cm.display.scrollbars) {
+      cm.display.scrollbars.clear();
+      if (cm.display.scrollbars.addClass)
+        rmClass(cm.display.wrapper, cm.display.scrollbars.addClass);
+    }
+
+    cm.display.scrollbars = new CodeMirror.scrollbarModel[cm.options.scrollbarStyle](function(node) {
+      cm.display.wrapper.insertBefore(node, cm.display.scrollbarFiller);
+      on(node, "mousedown", function() {
+        if (cm.state.focused) setTimeout(bind(focusInput, cm), 0);
+      });
+      node.setAttribute("not-content", "true");
+    }, function(pos, axis) {
+      if (axis == "horizontal") setScrollLeft(cm, pos);
+      else setScrollTop(cm, pos);
+    }, cm);
+    if (cm.display.scrollbars.addClass)
+      addClass(cm.display.wrapper, cm.display.scrollbars.addClass);
+  }
+
+  function updateScrollbars(cm, measure) {
+    if (!measure) measure = measureForScrollbars(cm);
+    var startWidth = cm.display.barWidth, startHeight = cm.display.barHeight;
+    updateScrollbarsInner(cm, measure);
+    for (var i = 0; i < 4 && startWidth != cm.display.barWidth || startHeight != cm.display.barHeight; i++) {
+      if (startWidth != cm.display.barWidth && cm.options.lineWrapping)
+        updateHeightsInViewport(cm);
+      updateScrollbarsInner(cm, measureForScrollbars(cm));
+      startWidth = cm.display.barWidth; startHeight = cm.display.barHeight;
+    }
   }
 
   // Re-synchronize the fake scrollbars with the actual size of the
   // content.
-  function updateScrollbars(cm, measure) {
-    if (!measure) measure = measureForScrollbars(cm);
-    var d = cm.display, sWidth = scrollbarWidth(d.measure);
-    var scrollHeight = measure.docHeight + scrollerCutOff;
-    var needsH = measure.scrollWidth > measure.clientWidth;
-    if (needsH && measure.scrollWidth <= measure.clientWidth + 1 &&
-        sWidth > 0 && !measure.hScrollbarTakesSpace)
-      needsH = false; // (Issue #2562)
-    var needsV = scrollHeight > measure.clientHeight;
+  function updateScrollbarsInner(cm, measure) {
+    var d = cm.display;
+    var sizes = d.scrollbars.update(measure);
 
-    if (needsV) {
-      d.scrollbarV.style.display = "block";
-      d.scrollbarV.style.bottom = needsH ? sWidth + "px" : "0";
-      // A bug in IE8 can cause this value to be negative, so guard it.
-      d.scrollbarV.firstChild.style.height =
-        Math.max(0, scrollHeight - measure.clientHeight + (measure.barHeight || d.scrollbarV.clientHeight)) + "px";
-    } else {
-      d.scrollbarV.style.display = "";
-      d.scrollbarV.firstChild.style.height = "0";
-    }
-    if (needsH) {
-      d.scrollbarH.style.display = "block";
-      d.scrollbarH.style.right = needsV ? sWidth + "px" : "0";
-      d.scrollbarH.firstChild.style.width =
-        (measure.scrollWidth - measure.clientWidth + (measure.barWidth || d.scrollbarH.clientWidth)) + "px";
-    } else {
-      d.scrollbarH.style.display = "";
-      d.scrollbarH.firstChild.style.width = "0";
-    }
-    if (needsH && needsV) {
+    d.sizer.style.paddingRight = (d.barWidth = sizes.right) + "px";
+    d.sizer.style.paddingBottom = (d.barHeight = sizes.bottom) + "px";
+
+    if (sizes.right && sizes.bottom) {
       d.scrollbarFiller.style.display = "block";
-      d.scrollbarFiller.style.height = d.scrollbarFiller.style.width = sWidth + "px";
+      d.scrollbarFiller.style.height = sizes.bottom + "px";
+      d.scrollbarFiller.style.width = sizes.right + "px";
     } else d.scrollbarFiller.style.display = "";
-    if (needsH && cm.options.coverGutterNextToScrollbar && cm.options.fixedGutter) {
+    if (sizes.bottom && cm.options.coverGutterNextToScrollbar && cm.options.fixedGutter) {
       d.gutterFiller.style.display = "block";
-      d.gutterFiller.style.height = sWidth + "px";
-      d.gutterFiller.style.width = d.gutters.offsetWidth + "px";
+      d.gutterFiller.style.height = sizes.bottom + "px";
+      d.gutterFiller.style.width = measure.gutterWidth + "px";
     } else d.gutterFiller.style.display = "";
-
-    if (!cm.state.checkedOverlayScrollbar && measure.clientHeight > 0) {
-      if (sWidth === 0) {
-        var w = mac && !mac_geMountainLion ? "12px" : "18px";
-        d.scrollbarV.style.minWidth = d.scrollbarH.style.minHeight = w;
-        var barMouseDown = function(e) {
-          if (e_target(e) != d.scrollbarV && e_target(e) != d.scrollbarH)
-            operation(cm, onMouseDown)(e);
-        };
-        on(d.scrollbarV, "mousedown", barMouseDown);
-        on(d.scrollbarH, "mousedown", barMouseDown);
-      }
-      cm.state.checkedOverlayScrollbar = true;
-    }
   }
 
   // Compute the lines that are visible in a given viewport (defaults
@@ -1651,12 +1741,13 @@
     // forces those lines into the viewport (if possible).
     if (viewport && viewport.ensure) {
       var ensureFrom = viewport.ensure.from.line, ensureTo = viewport.ensure.to.line;
-      if (ensureFrom < from)
-        return {from: ensureFrom,
-                to: lineAtHeight(doc, heightAtLine(getLine(doc, ensureFrom)) + display.wrapper.clientHeight)};
-      if (Math.min(ensureTo, doc.lastLine()) >= to)
-        return {from: lineAtHeight(doc, heightAtLine(getLine(doc, ensureTo)) - display.wrapper.clientHeight),
-                to: ensureTo};
+      if (ensureFrom < from) {
+        from = ensureFrom;
+        to = lineAtHeight(doc, heightAtLine(getLine(doc, ensureFrom)) + display.wrapper.clientHeight);
+      } else if (Math.min(ensureTo, doc.lastLine()) >= to) {
+        from = lineAtHeight(doc, heightAtLine(getLine(doc, ensureTo)) - display.wrapper.clientHeight);
+        to = ensureTo;
+      }
     }
     return {from: from, to: Math.max(to, from + 1)};
   }
@@ -1724,10 +1815,20 @@
     this.editorIsHidden = !display.wrapper.offsetWidth;
     this.wrapperHeight = display.wrapper.clientHeight;
     this.wrapperWidth = display.wrapper.clientWidth;
-    this.oldViewFrom = display.viewFrom; this.oldViewTo = display.viewTo;
-    this.oldScrollerWidth = display.scroller.clientWidth;
+    this.oldDisplayWidth = displayWidth(cm);
     this.force = force;
     this.dims = getDimensions(cm);
+  }
+
+  function maybeClipScrollbars(cm) {
+    var display = cm.display;
+    if (!display.scrollbarsClipped && display.scroller.offsetWidth) {
+      display.nativeBarWidth = display.scroller.offsetWidth - display.scroller.clientWidth;
+      display.heightForcer.style.height = scrollGap(cm) + "px";
+      display.sizer.style.marginBottom = -display.nativeBarWidth + "px";
+      display.sizer.style.borderRightWidth = scrollGap(cm) + "px";
+      display.scrollbarsClipped = true;
+    }
   }
 
   // Does the actual updating of the line display. Bails out
@@ -1735,6 +1836,7 @@
   // false.
   function updateDisplayIfNeeded(cm, update) {
     var display = cm.display, doc = cm.doc;
+
     if (update.editorIsHidden) {
       resetView(cm);
       return false;
@@ -1787,9 +1889,10 @@
     if (focused && activeElt() != focused && focused.offsetHeight) focused.focus();
 
     // Prevent selection and cursors from interfering with the scroll
-    // width.
+    // width and height.
     removeChildren(display.cursorDiv);
     removeChildren(display.selectionDiv);
+    display.heightForcer.style.top = display.gutters.style.height = 0;
 
     if (different) {
       display.lastWrapHeight = update.wrapperHeight;
@@ -1805,14 +1908,13 @@
   function postUpdateDisplay(cm, update) {
     var force = update.force, viewport = update.viewport;
     for (var first = true;; first = false) {
-      if (first && cm.options.lineWrapping && update.oldScrollerWidth != cm.display.scroller.clientWidth) {
+      if (first && cm.options.lineWrapping && update.oldDisplayWidth != displayWidth(cm)) {
         force = true;
       } else {
         force = false;
         // Clip forced viewport to actual scrollable area.
         if (viewport && viewport.top != null)
-          viewport = {top: Math.min(cm.doc.height + paddingVert(cm.display) - scrollerCutOff -
-                                    cm.display.scroller.clientHeight, viewport.top)};
+          viewport = {top: Math.min(cm.doc.height + paddingVert(cm.display) - displayHeight(cm), viewport.top)};
         // Updated line heights might result in the drawn area not
         // actually covering the viewport. Keep looping until it does.
         update.visible = visibleLines(cm.display, cm.doc, viewport);
@@ -1828,8 +1930,10 @@
     }
 
     signalLater(cm, "update", cm);
-    if (cm.display.viewFrom != update.oldViewFrom || cm.display.viewTo != update.oldViewTo)
+    if (cm.display.viewFrom != cm.display.reportedViewFrom || cm.display.viewTo != cm.display.reportedViewTo) {
       signalLater(cm, "viewportChange", cm, cm.display.viewFrom, cm.display.viewTo);
+      cm.display.reportedViewFrom = cm.display.viewFrom; cm.display.reportedViewTo = cm.display.viewTo;
+    }
   }
 
   function updateDisplaySimple(cm, viewport) {
@@ -1846,16 +1950,7 @@
 
   function setDocumentHeight(cm, measure) {
     cm.display.sizer.style.minHeight = cm.display.heightForcer.style.top = measure.docHeight + "px";
-    cm.display.gutters.style.height = Math.max(measure.docHeight, measure.clientHeight - scrollerCutOff) + "px";
-  }
-
-  function checkForWebkitWidthBug(cm, measure) {
-    // Work around Webkit bug where it sometimes reserves space for a
-    // non-existing phantom scrollbar in the scroller (Issue #2420)
-    if (cm.display.sizer.offsetWidth + cm.display.gutters.offsetWidth < cm.display.scroller.clientWidth - 1) {
-      cm.display.sizer.style.minHeight = cm.display.heightForcer.style.top = "0px";
-      cm.display.gutters.style.height = measure.docHeight + "px";
-    }
+    cm.display.gutters.style.height = Math.max(measure.docHeight + scrollGap(cm), measure.clientHeight) + "px";
   }
 
   // Read the actual heights of the rendered lines, and update their
@@ -2494,7 +2589,8 @@
   function drawSelectionRange(cm, range, output) {
     var display = cm.display, doc = cm.doc;
     var fragment = document.createDocumentFragment();
-    var padding = paddingH(cm.display), leftSide = padding.left, rightSide = display.lineSpace.offsetWidth - padding.right;
+    var padding = paddingH(cm.display), leftSide = padding.left;
+    var rightSide = Math.max(display.sizerWidth, displayWidth(cm) - display.sizer.offsetLeft) - padding.right;
 
     function add(left, top, width, bottom) {
       if (top < 0) top = 0;
@@ -2673,13 +2769,21 @@
     return data;
   }
 
+  function scrollGap(cm) { return scrollerGap - cm.display.nativeBarWidth; }
+  function displayWidth(cm) {
+    return cm.display.scroller.clientWidth - scrollGap(cm) - cm.display.barWidth;
+  }
+  function displayHeight(cm) {
+    return cm.display.scroller.clientHeight - scrollGap(cm) - cm.display.barHeight;
+  }
+
   // Ensure the lineView.wrapping.heights array is populated. This is
   // an array of bottom offsets for the lines that make up a drawn
   // line. When lineWrapping is on, there might be more than one
   // height.
   function ensureLineHeights(cm, lineView, rect) {
     var wrapping = cm.options.lineWrapping;
-    var curWidth = wrapping && cm.display.scroller.clientWidth;
+    var curWidth = wrapping && displayWidth(cm);
     if (!lineView.measure.heights || wrapping && lineView.measure.width != curWidth) {
       var heights = lineView.measure.heights = [];
       if (wrapping) {
@@ -3197,6 +3301,7 @@
 
   function endOperation_R1(op) {
     var cm = op.cm, display = cm.display;
+    maybeClipScrollbars(cm);
     if (op.updateMaxLine) findMaxLine(cm);
 
     op.mustUpdate = op.viewChanged || op.forceUpdate || op.scrollTop != null ||
@@ -3222,8 +3327,10 @@
     // updateDisplay_W2 will use these properties to do the actual resizing
     if (display.maxLineChanged && !cm.options.lineWrapping) {
       op.adjustWidthTo = measureChar(cm, display.maxLine, display.maxLine.text.length).left + 3;
-      op.maxScrollLeft = Math.max(0, display.sizer.offsetLeft + op.adjustWidthTo +
-                                  scrollerCutOff - display.scroller.clientWidth);
+      cm.display.sizerWidth = op.adjustWidthTo;
+      op.barMeasure.scrollWidth =
+        Math.max(display.scroller.clientWidth, display.sizer.offsetLeft + op.adjustWidthTo + scrollGap(cm) + cm.display.barWidth);
+      op.maxScrollLeft = Math.max(0, display.sizer.offsetLeft + op.adjustWidthTo - displayWidth(cm));
     }
 
     if (op.updatedDisplay || op.selectionChanged)
@@ -3256,9 +3363,6 @@
   function endOperation_finish(op) {
     var cm = op.cm, display = cm.display, doc = cm.doc;
 
-    if (op.adjustWidthTo != null && Math.abs(op.barMeasure.scrollWidth - cm.display.scroller.scrollWidth) > 1)
-      updateScrollbars(cm);
-
     if (op.updatedDisplay) postUpdateDisplay(cm, op.update);
 
     // Abort mouse wheel delta measurement, when scrolling explicitly
@@ -3267,12 +3371,14 @@
 
     // Propagate the scroll position to the actual DOM scroller
     if (op.scrollTop != null && (display.scroller.scrollTop != op.scrollTop || op.forceScroll)) {
-      var top = Math.max(0, Math.min(display.scroller.scrollHeight - display.scroller.clientHeight, op.scrollTop));
-      display.scroller.scrollTop = display.scrollbarV.scrollTop = doc.scrollTop = top;
+      doc.scrollTop = Math.max(0, Math.min(display.scroller.scrollHeight - display.scroller.clientHeight, op.scrollTop));
+      display.scrollbars.setScrollTop(doc.scrollTop);
+      display.scroller.scrollTop = doc.scrollTop;
     }
     if (op.scrollLeft != null && (display.scroller.scrollLeft != op.scrollLeft || op.forceScroll)) {
-      var left = Math.max(0, Math.min(display.scroller.scrollWidth - display.scroller.clientWidth, op.scrollLeft));
-      display.scroller.scrollLeft = display.scrollbarH.scrollLeft = doc.scrollLeft = left;
+      doc.scrollLeft = Math.max(0, Math.min(display.scroller.scrollWidth - displayWidth(cm), op.scrollLeft));
+      display.scrollbars.setScrollLeft(doc.scrollLeft);
+      display.scroller.scrollLeft = doc.scrollLeft;
       alignHorizontally(cm);
     }
     // If we need to scroll a specific position into view, do so.
@@ -3292,16 +3398,6 @@
 
     if (display.wrapper.offsetHeight)
       doc.scrollTop = cm.display.scroller.scrollTop;
-
-    // Apply workaround for two webkit bugs
-    if (op.updatedDisplay && webkit) {
-      if (cm.options.lineWrapping)
-        checkForWebkitWidthBug(cm, op.barMeasure); // (Issue #2420)
-      if (op.barMeasure.scrollWidth > op.barMeasure.clientWidth &&
-          op.barMeasure.scrollWidth < op.barMeasure.clientWidth + 1 &&
-          !hScrollbarTakesSpace(cm))
-        updateScrollbars(cm); // (Issue #2562)
-    }
 
     // Fire change events, and delayed event handlers
     if (op.changeObjs)
@@ -3661,6 +3757,7 @@
   // Reset the input to correspond to the selection (or to be empty,
   // when not typing and nothing is selected)
   function resetInput(cm, typing) {
+    if (cm.display.contextMenuPending) return;
     var minimal, selected, doc = cm.doc;
     if (cm.somethingSelected()) {
       cm.display.prevInput = "";
@@ -3727,28 +3824,18 @@
         signal(cm, "scroll", cm);
       }
     });
-    on(d.scrollbarV, "scroll", function() {
-      if (d.scroller.clientHeight) setScrollTop(cm, d.scrollbarV.scrollTop);
-    });
-    on(d.scrollbarH, "scroll", function() {
-      if (d.scroller.clientHeight) setScrollLeft(cm, d.scrollbarH.scrollLeft);
-    });
 
     // Listen to wheel events in order to try and update the viewport on time.
     on(d.scroller, "mousewheel", function(e){onScrollWheel(cm, e);});
     on(d.scroller, "DOMMouseScroll", function(e){onScrollWheel(cm, e);});
 
-    // Prevent clicks in the scrollbars from killing focus
-    function reFocus() { if (cm.state.focused) setTimeout(bind(focusInput, cm), 0); }
-    on(d.scrollbarH, "mousedown", reFocus);
-    on(d.scrollbarV, "mousedown", reFocus);
     // Prevent wrapper from ever scrolling
     on(d.wrapper, "scroll", function() { d.wrapper.scrollTop = d.wrapper.scrollLeft = 0; });
 
     on(d.input, "keyup", function(e) { onKeyUp.call(cm, e); });
     on(d.input, "input", function() {
       if (ie && ie_version >= 9 && cm.display.inputHasSelection) cm.display.inputHasSelection = null;
-      fastPoll(cm);
+      readInput(cm);
     });
     on(d.input, "keydown", operation(cm, onKeyDown));
     on(d.input, "keypress", operation(cm, onKeyPress));
@@ -3834,6 +3921,7 @@
       return;
     // Might be a text scaling operation, clear size caches.
     d.cachedCharWidth = d.cachedTextHeight = d.cachedPaddingH = null;
+    d.scrollbarsClipped = false;
     cm.setSize();
   }
 
@@ -3853,11 +3941,8 @@
   // coordinates beyond the right of the text.
   function posFromMouse(cm, e, liberal, forRect) {
     var display = cm.display;
-    if (!liberal) {
-      var target = e_target(e);
-      if (target == display.scrollbarH || target == display.scrollbarV ||
-          target == display.scrollbarFiller || target == display.gutterFiller) return null;
-    }
+    if (!liberal && e_target(e).getAttribute("not-content") == "true") return null;
+
     var x, y, space = display.lineSpace.getBoundingClientRect();
     // Fails unpredictably on IE[67] when mouse is dragged around quickly.
     try { x = e.clientX - space.left; y = e.clientY - space.top; }
@@ -3927,9 +4012,10 @@
       lastClick = {time: now, pos: start};
     }
 
-    var sel = cm.doc.sel, modifier = mac ? e.metaKey : e.ctrlKey;
+    var sel = cm.doc.sel, modifier = mac ? e.metaKey : e.ctrlKey, contained;
     if (cm.options.dragDrop && dragAndDrop && !isReadOnly(cm) &&
-        type == "single" && sel.contains(start) > -1 && sel.somethingSelected())
+        type == "single" && (contained = sel.contains(start)) > -1 &&
+        !sel.ranges[contained].empty())
       leftButtonStartDrag(cm, e, start, modifier);
     else
       leftButtonSelect(cm, e, start, type, modifier);
@@ -3968,11 +4054,11 @@
     var display = cm.display, doc = cm.doc;
     e_preventDefault(e);
 
-    var ourRange, ourIndex, startSel = doc.sel;
+    var ourRange, ourIndex, startSel = doc.sel, ranges = startSel.ranges;
     if (addNew && !e.shiftKey) {
       ourIndex = doc.sel.contains(start);
       if (ourIndex > -1)
-        ourRange = doc.sel.ranges[ourIndex];
+        ourRange = ranges[ourIndex];
       else
         ourRange = new Range(start, start);
     } else {
@@ -4004,12 +4090,15 @@
       ourIndex = 0;
       setSelection(doc, new Selection([ourRange], 0), sel_mouse);
       startSel = doc.sel;
-    } else if (ourIndex > -1) {
-      replaceOneSelection(doc, ourIndex, ourRange, sel_mouse);
-    } else {
-      ourIndex = doc.sel.ranges.length;
-      setSelection(doc, normalizeSelection(doc.sel.ranges.concat([ourRange]), ourIndex),
+    } else if (ourIndex == -1) {
+      ourIndex = ranges.length;
+      setSelection(doc, normalizeSelection(ranges.concat([ourRange]), ourIndex),
                    {scroll: false, origin: "*mouse"});
+    } else if (ranges.length > 1 && ranges[ourIndex].empty()) {
+      setSelection(doc, normalizeSelection(ranges.slice(0, ourIndex).concat(ranges.slice(ourIndex + 1)), 0));
+      startSel = doc.sel;
+    } else {
+      replaceOneSelection(doc, ourIndex, ourRange, sel_mouse);
     }
 
     var lastPos = start;
@@ -4215,7 +4304,7 @@
     cm.doc.scrollTop = val;
     if (!gecko) updateDisplaySimple(cm, {top: val});
     if (cm.display.scroller.scrollTop != val) cm.display.scroller.scrollTop = val;
-    if (cm.display.scrollbarV.scrollTop != val) cm.display.scrollbarV.scrollTop = val;
+    cm.display.scrollbars.setScrollTop(val);
     if (gecko) updateDisplaySimple(cm);
     startWorker(cm, 100);
   }
@@ -4227,7 +4316,7 @@
     cm.doc.scrollLeft = val;
     alignHorizontally(cm);
     if (cm.display.scroller.scrollLeft != val) cm.display.scroller.scrollLeft = val;
-    if (cm.display.scrollbarH.scrollLeft != val) cm.display.scrollbarH.scrollLeft = val;
+    cm.display.scrollbars.setScrollLeft(val);
   }
 
   // Since the delta values reported on mouse wheel events are
@@ -4251,11 +4340,22 @@
   else if (chrome) wheelPixelsPerUnit = -.7;
   else if (safari) wheelPixelsPerUnit = -1/3;
 
-  function onScrollWheel(cm, e) {
+  var wheelEventDelta = function(e) {
     var dx = e.wheelDeltaX, dy = e.wheelDeltaY;
     if (dx == null && e.detail && e.axis == e.HORIZONTAL_AXIS) dx = e.detail;
     if (dy == null && e.detail && e.axis == e.VERTICAL_AXIS) dy = e.detail;
     else if (dy == null) dy = e.wheelDelta;
+    return {x: dx, y: dy};
+  };
+  CodeMirror.wheelEventPixels = function(e) {
+    var delta = wheelEventDelta(e);
+    delta.x *= wheelPixelsPerUnit;
+    delta.y *= wheelPixelsPerUnit;
+    return delta;
+  };
+
+  function onScrollWheel(cm, e) {
+    var delta = wheelEventDelta(e), dx = delta.x, dy = delta.y;
 
     var display = cm.display, scroll = display.scroller;
     // Quit if there's nothing to scroll here
@@ -4348,11 +4448,11 @@
 
   function lookupKeyForEditor(cm, name, handle) {
     for (var i = 0; i < cm.state.keyMaps.length; i++) {
-      var result = lookupKey(name, cm.state.keyMaps[i], handle);
+      var result = lookupKey(name, cm.state.keyMaps[i], handle, cm);
       if (result) return result;
     }
-    return (cm.options.extraKeys && lookupKey(name, cm.options.extraKeys, handle))
-      || lookupKey(name, cm.options.keyMap, handle);
+    return (cm.options.extraKeys && lookupKey(name, cm.options.extraKeys, handle, cm))
+      || lookupKey(name, cm.options.keyMap, handle, cm);
   }
 
   var stopSeq = new Delayed;
@@ -4526,6 +4626,7 @@
     resetInput(cm);
     // Adds "Select all" to context menu in FF
     if (!cm.somethingSelected()) display.input.value = display.prevInput = " ";
+    display.contextMenuPending = true;
     display.selForContextMenu = cm.doc.sel;
     clearTimeout(display.detectingSelectAll);
 
@@ -4544,9 +4645,10 @@
       }
     }
     function rehide() {
+      display.contextMenuPending = false;
       display.inputDiv.style.position = "relative";
       display.input.style.cssText = oldCSS;
-      if (ie && ie_version < 9) display.scrollbarV.scrollTop = display.scroller.scrollTop = scrollPos;
+      if (ie && ie_version < 9) display.scrollbars.setScrollTop(display.scroller.scrollTop = scrollPos);
       slowPoll(cm);
 
       // Try to detect the user choosing select-all
@@ -4896,7 +4998,7 @@
     if (doScroll != null && !phantom) {
       var scrollNode = elt("div", "\u200b", null, "position: absolute; top: " +
                            (coords.top - display.viewOffset - paddingTop(cm.display)) + "px; height: " +
-                           (coords.bottom - coords.top + scrollerCutOff) + "px; left: " +
+                           (coords.bottom - coords.top + scrollGap(cm) + display.barHeight) + "px; left: " +
                            coords.left + "px; width: 2px;");
       cm.display.lineSpace.appendChild(scrollNode);
       scrollNode.scrollIntoView(doScroll);
@@ -4925,8 +5027,9 @@
         setScrollLeft(cm, scrollPos.scrollLeft);
         if (Math.abs(cm.doc.scrollLeft - startLeft) > 1) changed = true;
       }
-      if (!changed) return coords;
+      if (!changed) break;
     }
+    return coords;
   }
 
   // Scroll a given set of coordinates into view (immediately).
@@ -4944,7 +5047,7 @@
     var display = cm.display, snapMargin = textHeight(cm.display);
     if (y1 < 0) y1 = 0;
     var screentop = cm.curOp && cm.curOp.scrollTop != null ? cm.curOp.scrollTop : display.scroller.scrollTop;
-    var screen = display.scroller.clientHeight - scrollerCutOff, result = {};
+    var screen = displayHeight(cm), result = {};
     if (y2 - y1 > screen) y2 = y1 + screen;
     var docBottom = cm.doc.height + paddingVert(display);
     var atTop = y1 < snapMargin, atBottom = y2 > docBottom - snapMargin;
@@ -4956,7 +5059,7 @@
     }
 
     var screenleft = cm.curOp && cm.curOp.scrollLeft != null ? cm.curOp.scrollLeft : display.scroller.scrollLeft;
-    var screenw = display.scroller.clientWidth - scrollerCutOff - display.gutters.offsetWidth;
+    var screenw = displayWidth(cm) - (cm.options.fixedGutter ? display.gutters.offsetWidth : 0);
     var tooWide = x2 - x1 > screenw;
     if (tooWide) x2 = x1 + screenw;
     if (x1 < 10)
@@ -4965,7 +5068,6 @@
       result.scrollLeft = Math.max(0, x1 - (tooWide ? 0 : 10));
     else if (x2 > screenw + screenleft - 3)
       result.scrollLeft = x2 + (tooWide ? 0 : 10) - screenw;
-
     return result;
   }
 
@@ -5554,10 +5656,11 @@
       if (y != null) this.curOp.scrollTop = y;
     }),
     getScrollInfo: function() {
-      var scroller = this.display.scroller, co = scrollerCutOff;
+      var scroller = this.display.scroller;
       return {left: scroller.scrollLeft, top: scroller.scrollTop,
-              height: scroller.scrollHeight - co, width: scroller.scrollWidth - co,
-              clientHeight: scroller.clientHeight - co, clientWidth: scroller.clientWidth - co};
+              height: scroller.scrollHeight - scrollGap(this) - this.display.barHeight,
+              width: scroller.scrollWidth - scrollGap(this) - this.display.barWidth,
+              clientHeight: displayHeight(this), clientWidth: displayWidth(this)};
     },
 
     scrollIntoView: methodOp(function(range, margin) {
@@ -5699,7 +5802,13 @@
     cm.display.gutters.style.left = val ? compensateForHScroll(cm.display) + "px" : "0";
     cm.refresh();
   }, true);
-  option("coverGutterNextToScrollbar", false, updateScrollbars, true);
+  option("coverGutterNextToScrollbar", false, function(cm) {updateScrollbars(cm);}, true);
+  option("scrollbarStyle", "native", function(cm) {
+    initScrollbars(cm);
+    updateScrollbars(cm);
+    cm.display.scrollbars.setScrollTop(cm.doc.scrollTop);
+    cm.display.scrollbars.setScrollLeft(cm.doc.scrollLeft);
+  }, true);
   option("lineNumbers", false, function(cm) {
     setGuttersForLineNumbers(cm.options);
     guttersChanged(cm);
@@ -6129,18 +6238,18 @@
     return keymap;
   };
 
-  var lookupKey = CodeMirror.lookupKey = function(key, map, handle) {
+  var lookupKey = CodeMirror.lookupKey = function(key, map, handle, context) {
     map = getKeyMap(map);
-    var found = map.call ? map.call(key) : map[key];
+    var found = map.call ? map.call(key, context) : map[key];
     if (found === false) return "nothing";
     if (found === "...") return "multi";
     if (found != null && handle(found)) return "handled";
 
     if (map.fallthrough) {
       if (Object.prototype.toString.call(map.fallthrough) != "[object Array]")
-        return lookupKey(key, map.fallthrough, handle);
+        return lookupKey(key, map.fallthrough, handle, context);
       for (var i = 0; i < map.fallthrough.length; i++) {
-        var result = lookupKey(key, map.fallthrough[i], handle);
+        var result = lookupKey(key, map.fallthrough[i], handle, context);
         if (result) return result;
       }
     }
@@ -7071,8 +7180,11 @@
         if (mName) style = "m-" + (style ? mName + " " + style : mName);
       }
       if (!flattenSpans || curStyle != style) {
-        if (curStart < stream.start) f(stream.start, curStyle);
-        curStart = stream.start; curStyle = style;
+        while (curStart < stream.start) {
+          curStart = Math.min(stream.start, curStart + 50000);
+          f(curStart, curStyle);
+        }
+        curStyle = style;
       }
       stream.start = stream.pos;
     }
@@ -8453,7 +8565,7 @@
   // MISC UTILITIES
 
   // Number of pixels added to scroller and sizer to hide scrollbar
-  var scrollerCutOff = 30;
+  var scrollerGap = 30;
 
   // Returned or thrown by various protocols to signal 'I'm not
   // handling this'.
@@ -8679,7 +8791,6 @@
     on(window, "resize", function() {
       if (resizeTimer == null) resizeTimer = setTimeout(function() {
         resizeTimer = null;
-        knownScrollbarWidth = null;
         forEachCodeMirror(onResize);
       }, 100);
     });
@@ -8699,16 +8810,6 @@
     var div = elt('div');
     return "draggable" in div || "dragDrop" in div;
   }();
-
-  var knownScrollbarWidth;
-  function scrollbarWidth(measure) {
-    if (knownScrollbarWidth != null) return knownScrollbarWidth;
-    var test = elt("div", null, null, "width: 50px; height: 50px; overflow-x: scroll");
-    removeChildrenAndAdd(measure, test);
-    if (test.offsetWidth)
-      knownScrollbarWidth = test.offsetHeight - test.clientHeight;
-    return knownScrollbarWidth || 0;
-  }
 
   var zwspSupported;
   function zeroWidthElement(measure) {
@@ -9091,7 +9192,7 @@
 
   // THE END
 
-  CodeMirror.version = "4.7.1";
+  CodeMirror.version = "4.8.1";
 
   return CodeMirror;
 });
@@ -11882,7 +11983,7 @@ CodeMirror.defineMode("clike", function(config, parserConfig) {
 
 (function(mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-    mod(require("../../lib/codemirror", require("../xml/xml"), require("../meta")));
+    mod(require("../../lib/codemirror"), require("../xml/xml"), require("../meta"));
   else if (typeof define == "function" && define.amd) // AMD
     define(["../../lib/codemirror", "../xml/xml", "../meta"], mod);
   else // Plain browser env
@@ -12275,13 +12376,13 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
       return image;
     }
 
-    if (ch === '[' && stream.match(/.*\](\(| ?\[)/, false)) {
+    if (ch === '[' && stream.match(/.*\](\(.*\)| ?\[.*\])/, false)) {
       state.linkText = true;
       if (modeCfg.highlightFormatting) state.formatting = "link";
       return getType(state);
     }
 
-    if (ch === ']' && state.linkText) {
+    if (ch === ']' && state.linkText && stream.match(/\(.*\)| ?\[.*\]/, false)) {
       if (modeCfg.highlightFormatting) state.formatting = "link";
       var type = getType(state);
       state.linkText = false;
@@ -13504,60 +13605,60 @@ CodeMirror.defineMIME('text/x-rst', 'rst');
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+  "use strict";
 
-CodeMirror.defineMode("stex", function() {
+  CodeMirror.defineMode("stex", function() {
     "use strict";
 
     function pushCommand(state, command) {
-        state.cmdState.push(command);
+      state.cmdState.push(command);
     }
 
     function peekCommand(state) {
-        if (state.cmdState.length > 0) {
-            return state.cmdState[state.cmdState.length - 1];
-        } else {
-            return null;
-        }
+      if (state.cmdState.length > 0) {
+        return state.cmdState[state.cmdState.length - 1];
+      } else {
+        return null;
+      }
     }
 
     function popCommand(state) {
-        var plug = state.cmdState.pop();
-        if (plug) {
-            plug.closeBracket();
-        }
+      var plug = state.cmdState.pop();
+      if (plug) {
+        plug.closeBracket();
+      }
     }
 
     // returns the non-default plugin closest to the end of the list
     function getMostPowerful(state) {
-        var context = state.cmdState;
-        for (var i = context.length - 1; i >= 0; i--) {
-            var plug = context[i];
-            if (plug.name == "DEFAULT") {
-                continue;
-            }
-            return plug;
+      var context = state.cmdState;
+      for (var i = context.length - 1; i >= 0; i--) {
+        var plug = context[i];
+        if (plug.name == "DEFAULT") {
+          continue;
         }
-        return { styleIdentifier: function() { return null; } };
+        return plug;
+      }
+      return { styleIdentifier: function() { return null; } };
     }
 
     function addPluginPattern(pluginName, cmdStyle, styles) {
-        return function () {
-            this.name = pluginName;
-            this.bracketNo = 0;
-            this.style = cmdStyle;
-            this.styles = styles;
-            this.argument = null;   // \begin and \end have arguments that follow. These are stored in the plugin
+      return function () {
+        this.name = pluginName;
+        this.bracketNo = 0;
+        this.style = cmdStyle;
+        this.styles = styles;
+        this.argument = null;   // \begin and \end have arguments that follow. These are stored in the plugin
 
-            this.styleIdentifier = function() {
-                return this.styles[this.bracketNo - 1] || null;
-            };
-            this.openBracket = function() {
-                this.bracketNo++;
-                return "bracket";
-            };
-            this.closeBracket = function() {};
+        this.styleIdentifier = function() {
+          return this.styles[this.bracketNo - 1] || null;
         };
+        this.openBracket = function() {
+          this.bracketNo++;
+          return "bracket";
+        };
+        this.closeBracket = function() {};
+      };
     }
 
     var plugins = {};
@@ -13569,185 +13670,174 @@ CodeMirror.defineMode("stex", function() {
     plugins["end"] = addPluginPattern("end", "tag", ["atom"]);
 
     plugins["DEFAULT"] = function () {
-        this.name = "DEFAULT";
-        this.style = "tag";
+      this.name = "DEFAULT";
+      this.style = "tag";
 
-        this.styleIdentifier = this.openBracket = this.closeBracket = function() {};
+      this.styleIdentifier = this.openBracket = this.closeBracket = function() {};
     };
 
     function setState(state, f) {
-        state.f = f;
+      state.f = f;
     }
 
     // called when in a normal (no environment) context
     function normal(source, state) {
-        var plug;
-        // Do we look like '\command' ?  If so, attempt to apply the plugin 'command'
-        if (source.match(/^\\[a-zA-Z@]+/)) {
-            var cmdName = source.current().slice(1);
-            plug = plugins[cmdName] || plugins["DEFAULT"];
-            plug = new plug();
-            pushCommand(state, plug);
-            setState(state, beginParams);
-            return plug.style;
-        }
+      var plug;
+      // Do we look like '\command' ?  If so, attempt to apply the plugin 'command'
+      if (source.match(/^\\[a-zA-Z@]+/)) {
+        var cmdName = source.current().slice(1);
+        plug = plugins[cmdName] || plugins["DEFAULT"];
+        plug = new plug();
+        pushCommand(state, plug);
+        setState(state, beginParams);
+        return plug.style;
+      }
 
-        // escape characters
-        if (source.match(/^\\[$&%#{}_]/)) {
-          return "tag";
-        }
+      // escape characters
+      if (source.match(/^\\[$&%#{}_]/)) {
+        return "tag";
+      }
 
-        // white space control characters
-        if (source.match(/^\\[,;!\/\\]/)) {
-          return "tag";
-        }
+      // white space control characters
+      if (source.match(/^\\[,;!\/\\]/)) {
+        return "tag";
+      }
 
-        // find if we're starting various math modes
-        if (source.match("\\[")) {
-            setState(state, function(source, state){ return inMathMode(source, state, "\\]"); });
-            return "keyword";
-        }
-        if (source.match("$$")) {
-            setState(state, function(source, state){ return inMathMode(source, state, "$$"); });
-            return "keyword";
-        }
-        if (source.match("$")) {
-            setState(state, function(source, state){ return inMathMode(source, state, "$"); });
-            return "keyword";
-        }
+      // find if we're starting various math modes
+      if (source.match("\\[")) {
+        setState(state, function(source, state){ return inMathMode(source, state, "\\]"); });
+        return "keyword";
+      }
+      if (source.match("$$")) {
+        setState(state, function(source, state){ return inMathMode(source, state, "$$"); });
+        return "keyword";
+      }
+      if (source.match("$")) {
+        setState(state, function(source, state){ return inMathMode(source, state, "$"); });
+        return "keyword";
+      }
 
-        var ch = source.next();
-        if (ch == "%") {
-            // special case: % at end of its own line; stay in same state
-            if (!source.eol()) {
-              setState(state, inCComment);
-            }
-            return "comment";
-        }
-        else if (ch == '}' || ch == ']') {
-            plug = peekCommand(state);
-            if (plug) {
-                plug.closeBracket(ch);
-                setState(state, beginParams);
-            } else {
-                return "error";
-            }
-            return "bracket";
-        } else if (ch == '{' || ch == '[') {
-            plug = plugins["DEFAULT"];
-            plug = new plug();
-            pushCommand(state, plug);
-            return "bracket";
-        }
-        else if (/\d/.test(ch)) {
-            source.eatWhile(/[\w.%]/);
-            return "atom";
-        }
-        else {
-            source.eatWhile(/[\w\-_]/);
-            plug = getMostPowerful(state);
-            if (plug.name == 'begin') {
-                plug.argument = source.current();
-            }
-            return plug.styleIdentifier();
-        }
-    }
-
-    function inCComment(source, state) {
+      var ch = source.next();
+      if (ch == "%") {
         source.skipToEnd();
-        setState(state, normal);
         return "comment";
+      } else if (ch == '}' || ch == ']') {
+        plug = peekCommand(state);
+        if (plug) {
+          plug.closeBracket(ch);
+          setState(state, beginParams);
+        } else {
+          return "error";
+        }
+        return "bracket";
+      } else if (ch == '{' || ch == '[') {
+        plug = plugins["DEFAULT"];
+        plug = new plug();
+        pushCommand(state, plug);
+        return "bracket";
+      } else if (/\d/.test(ch)) {
+        source.eatWhile(/[\w.%]/);
+        return "atom";
+      } else {
+        source.eatWhile(/[\w\-_]/);
+        plug = getMostPowerful(state);
+        if (plug.name == 'begin') {
+          plug.argument = source.current();
+        }
+        return plug.styleIdentifier();
+      }
     }
 
     function inMathMode(source, state, endModeSeq) {
-        if (source.eatSpace()) {
-            return null;
-        }
-        if (source.match(endModeSeq)) {
-            setState(state, normal);
-            return "keyword";
-        }
-        if (source.match(/^\\[a-zA-Z@]+/)) {
-            return "tag";
-        }
-        if (source.match(/^[a-zA-Z]+/)) {
-            return "variable-2";
-        }
-        // escape characters
-        if (source.match(/^\\[$&%#{}_]/)) {
-          return "tag";
-        }
-        // white space control characters
-        if (source.match(/^\\[,;!\/]/)) {
-          return "tag";
-        }
-        // special math-mode characters
-        if (source.match(/^[\^_&]/)) {
-          return "tag";
-        }
-        // non-special characters
-        if (source.match(/^[+\-<>|=,\/@!*:;'"`~#?]/)) {
-            return null;
-        }
-        if (source.match(/^(\d+\.\d*|\d*\.\d+|\d+)/)) {
-          return "number";
-        }
-        var ch = source.next();
-        if (ch == "{" || ch == "}" || ch == "[" || ch == "]" || ch == "(" || ch == ")") {
-            return "bracket";
-        }
+      if (source.eatSpace()) {
+        return null;
+      }
+      if (source.match(endModeSeq)) {
+        setState(state, normal);
+        return "keyword";
+      }
+      if (source.match(/^\\[a-zA-Z@]+/)) {
+        return "tag";
+      }
+      if (source.match(/^[a-zA-Z]+/)) {
+        return "variable-2";
+      }
+      // escape characters
+      if (source.match(/^\\[$&%#{}_]/)) {
+        return "tag";
+      }
+      // white space control characters
+      if (source.match(/^\\[,;!\/]/)) {
+        return "tag";
+      }
+      // special math-mode characters
+      if (source.match(/^[\^_&]/)) {
+        return "tag";
+      }
+      // non-special characters
+      if (source.match(/^[+\-<>|=,\/@!*:;'"`~#?]/)) {
+        return null;
+      }
+      if (source.match(/^(\d+\.\d*|\d*\.\d+|\d+)/)) {
+        return "number";
+      }
+      var ch = source.next();
+      if (ch == "{" || ch == "}" || ch == "[" || ch == "]" || ch == "(" || ch == ")") {
+        return "bracket";
+      }
 
-        // eat comments here, because inCComment returns us to normal state!
-        if (ch == "%") {
-            if (!source.eol()) {
-                source.skipToEnd();
-            }
-            return "comment";
-        }
-        return "error";
+      if (ch == "%") {
+        source.skipToEnd();
+        return "comment";
+      }
+      return "error";
     }
 
     function beginParams(source, state) {
-        var ch = source.peek(), lastPlug;
-        if (ch == '{' || ch == '[') {
-            lastPlug = peekCommand(state);
-            lastPlug.openBracket(ch);
-            source.eat(ch);
-            setState(state, normal);
-            return "bracket";
-        }
-        if (/[ \t\r]/.test(ch)) {
-            source.eat(ch);
-            return null;
-        }
+      var ch = source.peek(), lastPlug;
+      if (ch == '{' || ch == '[') {
+        lastPlug = peekCommand(state);
+        lastPlug.openBracket(ch);
+        source.eat(ch);
         setState(state, normal);
-        popCommand(state);
+        return "bracket";
+      }
+      if (/[ \t\r]/.test(ch)) {
+        source.eat(ch);
+        return null;
+      }
+      setState(state, normal);
+      popCommand(state);
 
-        return normal(source, state);
+      return normal(source, state);
     }
 
     return {
-        startState: function() {
-            return {
-                cmdState: [],
-                f: normal
-            };
-        },
-        copyState: function(s) {
-            return {
-                cmdState: s.cmdState.slice(),
-                f: s.f
-            };
-        },
-        token: function(stream, state) {
-            return state.f(stream, state);
-        },
-        lineComment: "%"
+      startState: function() {
+        return {
+          cmdState: [],
+          f: normal
+        };
+      },
+      copyState: function(s) {
+        return {
+          cmdState: s.cmdState.slice(),
+          f: s.f
+        };
+      },
+      token: function(stream, state) {
+        return state.f(stream, state);
+      },
+      blankLine: function(state) {
+        state.f = normal;
+        state.cmdState.length = 0;
+      },
+      lineComment: "%"
     };
-});
+  });
 
-CodeMirror.defineMIME("text/x-stex", "stex");
-CodeMirror.defineMIME("text/x-latex", "stex");
+  CodeMirror.defineMIME("text/x-stex", "stex");
+  CodeMirror.defineMIME("text/x-latex", "stex");
 
 });
 
@@ -15010,7 +15100,8 @@ CodeMirror.defineMode('shell', function() {
     token: function(stream, state) {
       return tokenize(stream, state);
     },
-    lineComment: '#'
+    lineComment: '#',
+    fold: "brace"
   };
 });
 
@@ -15761,6 +15852,13 @@ CodeMirror.defineMIME("text/x-go", "go");
     kill(cm, cm.getCursor(), findEnd(cm, by, dir), true);
   }
 
+  function killRegion(cm) {
+    if (cm.somethingSelected()) {
+      kill(cm, cm.getCursor("from"), cm.getCursor("to"));
+      return true;
+    }
+  }
+
   function addPrefix(cm, digit) {
     if (cm.state.emacsPrefix) {
       if (digit != "-") cm.state.emacsPrefix += digit;
@@ -15889,9 +15987,9 @@ CodeMirror.defineMIME("text/x-go", "go");
     "Ctrl-F": move(byChar, 1), "Ctrl-B": move(byChar, -1),
     "Right": move(byChar, 1), "Left": move(byChar, -1),
     "Ctrl-D": function(cm) { killTo(cm, byChar, 1); },
-    "Delete": function(cm) { killTo(cm, byChar, 1); },
+    "Delete": function(cm) { killRegion(cm) || killTo(cm, byChar, 1); },
     "Ctrl-H": function(cm) { killTo(cm, byChar, -1); },
-    "Backspace": function(cm) { killTo(cm, byChar, -1); },
+    "Backspace": function(cm) { killRegion(cm) || killTo(cm, byChar, -1); },
 
     "Alt-F": move(byWord, 1), "Alt-B": move(byWord, -1),
     "Alt-D": function(cm) { killTo(cm, byWord, 1); },
@@ -16080,11 +16178,11 @@ CodeMirror.defineMIME("text/x-go", "go");
     { keys: '<Up>', type: 'keyToKey', toKeys: 'k' },
     { keys: '<Down>', type: 'keyToKey', toKeys: 'j' },
     { keys: '<Space>', type: 'keyToKey', toKeys: 'l' },
-    { keys: '<BS>', type: 'keyToKey', toKeys: 'h' },
+    { keys: '<BS>', type: 'keyToKey', toKeys: 'h', context: 'normal'},
     { keys: '<C-Space>', type: 'keyToKey', toKeys: 'W' },
-    { keys: '<C-BS>', type: 'keyToKey', toKeys: 'B' },
+    { keys: '<C-BS>', type: 'keyToKey', toKeys: 'B', context: 'normal' },
     { keys: '<S-Space>', type: 'keyToKey', toKeys: 'w' },
-    { keys: '<S-BS>', type: 'keyToKey', toKeys: 'b' },
+    { keys: '<S-BS>', type: 'keyToKey', toKeys: 'b', context: 'normal' },
     { keys: '<C-n>', type: 'keyToKey', toKeys: 'j' },
     { keys: '<C-p>', type: 'keyToKey', toKeys: 'k' },
     { keys: '<C-[>', type: 'keyToKey', toKeys: '<Esc>' },
@@ -16232,55 +16330,7 @@ CodeMirror.defineMIME("text/x-go", "go");
 
   var Pos = CodeMirror.Pos;
 
-  var modifierCodes = [16, 17, 18, 91];
-  var specialKey = {Enter:'CR',Backspace:'BS',Delete:'Del'};
-  var mac = /Mac/.test(navigator.platform);
   var Vim = function() {
-    function lookupKey(e) {
-      var keyCode = e.keyCode;
-      if (modifierCodes.indexOf(keyCode) != -1) { return; }
-      var hasModifier = e.ctrlKey || e.metaKey;
-      var key = CodeMirror.keyNames[keyCode];
-      key = specialKey[key] || key;
-      var name = '';
-      if (e.ctrlKey) { name += 'C-'; }
-      if (e.altKey) { name += 'A-'; }
-      if (mac && e.metaKey || (!hasModifier && e.shiftKey) && key.length < 2) {
-        // Shift key bindings can only specified for special characters.
-        return;
-      } else if (e.shiftKey && !/^[A-Za-z]$/.test(key)) {
-        name += 'S-';
-      }
-      if (key.length == 1) { key = key.toLowerCase(); }
-      name += key;
-      if (name.length > 1) { name = '<' + name + '>'; }
-      return name;
-    }
-    // Keys with modifiers are handled using keydown due to limitations of
-    // keypress event.
-    function handleKeyDown(cm, e) {
-      var name = lookupKey(e);
-      if (!name) { return; }
-
-      CodeMirror.signal(cm, 'vim-keypress', name);
-      if (CodeMirror.Vim.handleKey(cm, name, 'user')) {
-        CodeMirror.e_stop(e);
-      }
-    }
-    // Keys without modifiers are handled using keypress to work best with
-    // non-standard keyboard layouts.
-    function handleKeyPress(cm, e) {
-      var code = e.charCode || e.keyCode;
-      if (e.ctrlKey || e.metaKey || e.altKey ||
-          e.shiftKey && code < 32) { return; }
-      var name = String.fromCharCode(code);
-
-      CodeMirror.signal(cm, 'vim-keypress', name);
-      if (CodeMirror.Vim.handleKey(cm, name, 'user')) {
-        CodeMirror.e_stop(e);
-      }
-    }
-
     function enterVimMode(cm) {
       cm.setOption('disableInput', true);
       cm.setOption('showCursorWhenSelecting', false);
@@ -16288,8 +16338,6 @@ CodeMirror.defineMIME("text/x-go", "go");
       cm.on('cursorActivity', onCursorActivity);
       maybeInitVimState(cm);
       CodeMirror.on(cm.getInputField(), 'paste', getOnPasteFn(cm));
-      cm.on('keypress', handleKeyPress);
-      cm.on('keydown', handleKeyDown);
     }
 
     function leaveVimMode(cm) {
@@ -16297,8 +16345,6 @@ CodeMirror.defineMIME("text/x-go", "go");
       cm.off('cursorActivity', onCursorActivity);
       CodeMirror.off(cm.getInputField(), 'paste', getOnPasteFn(cm));
       cm.state.vim = null;
-      cm.off('keypress', handleKeyPress);
-      cm.off('keydown', handleKeyDown);
     }
 
     function detachVimMap(cm, next) {
@@ -16323,6 +16369,60 @@ CodeMirror.defineMIME("text/x-go", "go");
       else if (!val && prev != CodeMirror.Init && /^vim/.test(cm.getOption("keyMap")))
         cm.setOption("keyMap", "default");
     });
+
+    function cmKey(key, cm) {
+      if (!cm) { return undefined; }
+      var vimKey = cmKeyToVimKey(key);
+      if (!vimKey) {
+        return false;
+      }
+      var cmd = CodeMirror.Vim.findKey(cm, vimKey);
+      if (typeof cmd == 'function') {
+        CodeMirror.signal(cm, 'vim-keypress', vimKey);
+      }
+      return cmd;
+    }
+
+    var modifiers = {'Shift': 'S', 'Ctrl': 'C', 'Alt': 'A', 'Cmd': 'D', 'Mod': 'A'};
+    var specialKeys = {Enter:'CR',Backspace:'BS',Delete:'Del'};
+    function cmKeyToVimKey(key) {
+      if (key.charAt(0) == '\'') {
+        // Keypress character binding of format "'a'"
+        return key.charAt(1);
+      }
+      var pieces = key.split('-');
+      if (/-$/.test(key)) {
+        // If the - key was typed, split will result in 2 extra empty strings
+        // in the array. Replace them with 1 '-'.
+        pieces.splice(-2, 2, '-');
+      }
+      var lastPiece = pieces[pieces.length - 1];
+      if (pieces.length == 1 && pieces[0].length == 1) {
+        // No-modifier bindings use literal character bindings above. Skip.
+        return false;
+      } else if (pieces.length == 2 && pieces[0] == 'Shift' && lastPiece.length == 1) {
+        // Ignore Shift+char bindings as they should be handled by literal character.
+        return false;
+      }
+      var hasCharacter = false;
+      for (var i = 0; i < pieces.length; i++) {
+        var piece = pieces[i];
+        if (piece in modifiers) { pieces[i] = modifiers[piece]; }
+        else { hasCharacter = true; }
+        if (piece in specialKeys) { pieces[i] = specialKeys[piece]; }
+      }
+      if (!hasCharacter) {
+        // Vim does not support modifier only keys.
+        return false;
+      }
+      // TODO: Current bindings expect the character to be lower case, but
+      // it looks like vim key notation uses upper case.
+      if (isUpperCase(lastPiece)) {
+        pieces[pieces.length - 1] = lastPiece.toLowerCase();
+      }
+      return '<' + pieces.join('-') + '>';
+    }
+
     function getOnPasteFn(cm) {
       var vim = cm.state.vim;
       if (!vim.onPasteFn) {
@@ -16632,9 +16732,23 @@ CodeMirror.defineMIME("text/x-go", "go");
         exCommands[name]=func;
         exCommandDispatcher.commandMap_[prefix]={name:name, shortName:prefix, type:'api'};
       },
-      // This is the outermost function called by CodeMirror, after keys have
-      // been mapped to their Vim equivalents.
-      handleKey: function(cm, key, origin) {
+      handleKey: function (cm, key, origin) {
+        var command = this.findKey(cm, key, origin);
+        if (typeof command === 'function') {
+          return command();
+        }
+      },
+      /**
+       * This is the outermost function called by CodeMirror, after keys have
+       * been mapped to their Vim equivalents.
+       *
+       * Finds a command based on the key (and cached keys if there is a
+       * multi-key sequence). Returns `undefined` if no key is matched, a noop
+       * function if a partial match is found (multi-key), and a function to
+       * execute the bound command if a a key is matched. The function always
+       * returns true.
+       */
+      findKey: function(cm, key, origin) {
         var vim = maybeInitVimState(cm);
         function handleMacroRecording() {
           var macroModeState = vimGlobalState.macroModeState;
@@ -16700,13 +16814,7 @@ CodeMirror.defineMIME("text/x-go", "go");
             cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
           }
           clearInputState(cm);
-          var command = match.command;
-          if (command.type == 'keyToKey') {
-            doKeyToKey(command.toKeys);
-          } else {
-            commandDispatcher.processCommand(cm, vim, command);
-          }
-          return true;
+          return match.command;
         }
 
         function handleKeyNonInsertMode() {
@@ -16724,31 +16832,44 @@ CodeMirror.defineMIME("text/x-go", "go");
           else if (match.type == 'partial') { return true; }
 
           vim.inputState.keyBuffer = '';
-          var command = match.command;
           var keysMatcher = /^(\d*)(.*)$/.exec(keys);
           if (keysMatcher[1] && keysMatcher[1] != '0') {
             vim.inputState.pushRepeatDigit(keysMatcher[1]);
           }
-          if (command.type == 'keyToKey') {
-            doKeyToKey(command.toKeys);
-          } else {
-            commandDispatcher.processCommand(cm, vim, command);
-          }
-          return true;
+          return match.command;
         }
 
-        return cm.operation(function() {
-          cm.curOp.isVimOp = true;
-          try {
-            if (vim.insertMode) { return handleKeyInsertMode(); }
-            else { return handleKeyNonInsertMode(); }
-          } catch (e) {
-            // clear VIM state in case it's in a bad state.
-            cm.state.vim = undefined;
-            maybeInitVimState(cm);
-            throw e;
-          }
-        });
+        var command;
+        if (vim.insertMode) { command = handleKeyInsertMode(); }
+        else { command = handleKeyNonInsertMode(); }
+        if (command === false) {
+          return undefined;
+        } else if (command === true) {
+          // TODO: Look into using CodeMirror's multi-key handling.
+          // Return no-op since we are caching the key. Counts as handled, but
+          // don't want act on it just yet.
+          return function() {};
+        } else {
+          return function() {
+            return cm.operation(function() {
+              cm.curOp.isVimOp = true;
+              try {
+                if (command.type == 'keyToKey') {
+                  doKeyToKey(command.toKeys);
+                } else {
+                  commandDispatcher.processCommand(cm, vim, command);
+                }
+              } catch (e) {
+                // clear VIM state in case it's in a bad state.
+                cm.state.vim = undefined;
+                maybeInitVimState(cm);
+                console['log'](e);
+                throw e;
+              }
+              return true;
+            });
+          };
+        }
       },
       handleEx: function(cm, input) {
         exCommandDispatcher.processCommand(cm, input);
@@ -17613,20 +17734,8 @@ CodeMirror.defineMIME("text/x-go", "go");
         return cm.findPosV(curStart, (motionArgs.forward ? repeat : -repeat), 'page');
       },
       moveByParagraph: function(cm, head, motionArgs) {
-        var line = head.line;
-        var repeat = motionArgs.repeat;
-        var inc = motionArgs.forward ? 1 : -1;
-        for (var i = 0; i < repeat; i++) {
-          if ((!motionArgs.forward && line === cm.firstLine() ) ||
-              (motionArgs.forward && line == cm.lastLine())) {
-            break;
-          }
-          line += inc;
-          while (line !== cm.firstLine() && line != cm.lastLine() && cm.getLine(line)) {
-            line += inc;
-          }
-        }
-        return Pos(line, 0);
+        var dir = motionArgs.forward ? 1 : -1;
+        return findParagraph(cm, head, motionArgs.repeat, dir);
       },
       moveByScroll: function(cm, head, motionArgs, vim) {
         var scrollbox = cm.getScrollInfo();
@@ -17764,6 +17873,8 @@ CodeMirror.defineMIME("text/x-go", "go");
         } else if (character === 'w') {
           tmp = expandWordUnderCursor(cm, inclusive, true /** forward */,
                                                      false /** bigWord */);
+        } else if (character === 'p') {
+          tmp = findParagraph(cm, head, motionArgs.repeat, 0, inclusive);
         } else {
           // No text object defined for this, don't move.
           return null;
@@ -19271,6 +19382,54 @@ CodeMirror.defineMIME("text/x-go", "go");
       return idx;
     }
 
+    function findParagraph(cm, head, repeat, dir, inclusive) {
+      var line = head.line;
+      var min = cm.firstLine();
+      var max = cm.lastLine();
+      var start, end, i = line;
+      function isEmpty(i) { return !cm.getLine(i); }
+      function isBoundary(i, dir, any) {
+        if (any) { return isEmpty(i) != isEmpty(i + dir); }
+        return !isEmpty(i) && isEmpty(i + dir);
+      }
+      if (dir) {
+        while (min <= i && i <= max && repeat > 0) {
+          if (isBoundary(i, dir)) { repeat--; }
+          i += dir;
+        }
+        return new Pos(i, 0);
+      }
+
+      var vim = cm.state.vim;
+      if (vim.visualMode && isBoundary(line, 1, true)) {
+        var anchor = vim.sel.anchor;
+        if (isBoundary(anchor.line, -1, true)) {
+          if (!inclusive || anchor.line != line) {
+            line += 1;
+          }
+        }
+      }
+      var startState = isEmpty(line);
+      for (i = line; i <= max && repeat; i++) {
+        if (isBoundary(i, 1, true)) {
+          if (!inclusive || isEmpty(i) != startState) {
+            repeat--;
+          }
+        }
+      }
+      end = new Pos(i, 0);
+      // select boundary before paragraph for the last one
+      if (i > max && !startState) { startState = true; }
+      else { inclusive = false; }
+      for (i = line; i > min; i--) {
+        if (!inclusive || isEmpty(i) == startState || i == line) {
+          if (isBoundary(i, -1, true)) { break; }
+        }
+      }
+      start = new Pos(i, 0);
+      return { start: start, end: end };
+    }
+
     // TODO: perhaps this finagling of start and end positions belonds
     // in codmirror/replaceRange?
     function selectCompanionObject(cm, head, symb, inclusive) {
@@ -20479,7 +20638,8 @@ CodeMirror.defineMIME("text/x-go", "go");
 
     CodeMirror.keyMap.vim = {
       attach: attachVimMap,
-      detach: detachVimMap
+      detach: detachVimMap,
+      call: cmKey
     };
 
     function exitInsertMode(cm) {
@@ -20552,20 +20712,16 @@ CodeMirror.defineMIME("text/x-go", "go");
       },
       fallthrough: ['default'],
       attach: attachVimMap,
-      detach: detachVimMap
-    };
-
-    CodeMirror.keyMap['await-second'] = {
-      fallthrough: ['vim-insert'],
-      attach: attachVimMap,
-      detach: detachVimMap
+      detach: detachVimMap,
+      call: cmKey
     };
 
     CodeMirror.keyMap['vim-replace'] = {
       'Backspace': 'goCharLeft',
       fallthrough: ['vim-insert'],
       attach: attachVimMap,
-      detach: detachVimMap
+      detach: detachVimMap,
+      call: cmKey
     };
 
     function executeMacroRegister(cm, vim, macroModeState, registerName) {
@@ -21744,6 +21900,78 @@ CodeMirror.defineMIME("text/x-go", "go");
 
 // END http://rawgit.com/TristanCavelier/texteditor/master/keymap-krx.js
 ////////////////////////////////////////////////////////////////////////////////
+// BEGIN http://rawgit.com/TristanCavelier/texteditor/master/keymap-debug.js
+/*jslint indent: 2 */
+(function (root) {
+  "use strict";
+
+  /*
+   Version: 0.1.0b
+
+   Copyright (c) 2014 Tristan Cavelier <t.cavelier@free.fr>
+
+   This program is free software. It comes without any warranty, to
+   the extent permitted by applicable law. You can redistribute it
+   and/or modify it under the terms of the Do What The Fuck You Want
+   To Public License, Version 2, as published by Sam Hocevar. See
+   below for more details.
+
+   ___________________________________________________________________
+  |                                                                   |
+  |           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE             |
+  |                   Version 2, December 2004                        |
+  |                                                                   |
+  |Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>                   |
+  |                                                                   |
+  |Everyone is permitted to copy and distribute verbatim or modified  |
+  |copies of this license document, and changing it is allowed as long|
+  |as the name is changed.                                            |
+  |                                                                   |
+  |           DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE             |
+  |  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION  |
+  |                                                                   |
+  | 0. You just DO WHAT THE FUCK YOU WANT TO.                         |
+  |___________________________________________________________________|
+
+  */
+
+  /*jslint vars: true */
+
+  var CodeMirror = root.CodeMirror;
+
+  function arrayMul(a1, a2) {
+    var a3 = [];
+    a1.forEach(function (v1) {
+      a2.forEach(function (v2) {
+        a3.push(v1 + v2);
+      });
+    });
+    return a3;
+  }
+
+  function debuggr(shortcut) {
+    return function (cm) {
+      alert(shortcut);
+    };
+  }
+
+  CodeMirror.keyMap.debug = {};
+  arrayMul(["", "Shift-"], arrayMul(["", "Crtl-"], arrayMul(["", "Alt-"], [
+    "Enter", "Esc", "Tab", "Backspace", "Delete", "Space", "Up", "Down", "Left", "Right",
+    "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "!", "/", ":", ";", "_", "-", ",", ".", "%", "(", ")", "{", "}", "[", "]", "<", ">", "\\", "=", "+", "@", "#", "$", "^", "&", "*", "\"", "'",
+    "Colon", "Semicolon", "Comma", "Apostrophe", "Percent", "Dot"
+  ]))).forEach(function (shortcut) {
+    CodeMirror.keyMap.debug[shortcut] = debuggr(shortcut);
+  });
+
+}(this));
+
+// END http://rawgit.com/TristanCavelier/texteditor/master/keymap-debug.js
+////////////////////////////////////////////////////////////////////////////////
 // BEGIN http://rawgit.com/marijnh/CodeMirror/master/addon/dialog/dialog.js
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: http://codemirror.net/LICENSE
@@ -21820,7 +22048,7 @@ CodeMirror.defineMIME("text/x-go", "go");
           CodeMirror.e_stop(e);
           close();
         }
-        if (e.keyCode == 13) callback(inp.value);
+        if (e.keyCode == 13) callback(inp.value, e);
       });
 
       if (options.closeOnBlur !== false) CodeMirror.on(inp, "blur", close);
@@ -22525,11 +22753,11 @@ CodeMirror.defineMIME("text/x-go", "go");
   function parseQuery(query) {
     var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
     if (isRE) {
-      query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
-      if (query.test("")) query = /x^/;
-    } else if (query == "") {
-      query = /x^/;
+      try { query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i"); }
+      catch(e) {} // Not a regular expression after all, do a string search
     }
+    if (typeof query == "string" ? query == "" : query.test(""))
+      query = /x^/;
     return query;
   }
   var queryDialog =
@@ -22544,6 +22772,10 @@ CodeMirror.defineMIME("text/x-go", "go");
         cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
         state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
         cm.addOverlay(state.overlay);
+        if (cm.showMatchesOnScrollbar) {
+          if (state.annotate) { state.annotate.clear(); state.annotate = null; }
+          state.annotate = cm.showMatchesOnScrollbar(state.query, queryCaseInsensitive(state.query));
+        }
         state.posFrom = state.posTo = cm.getCursor();
         findNext(cm, rev);
       });
@@ -22565,6 +22797,7 @@ CodeMirror.defineMIME("text/x-go", "go");
     if (!state.query) return;
     state.query = null;
     cm.removeOverlay(state.overlay);
+    if (state.annotate) { state.annotate.clear(); state.annotate = null; }
   });}
 
   var replaceQueryDialog =
@@ -37776,17 +38009,6 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
   var elEditor = null;
   var cmEditor = null;
 
-  function updateTextArea() {
-    root.clearTimeout(elEditor.__saving);
-    delete elEditor.__saving;
-    elEditor.value = cmEditor.getValue();
-  }
-
-  function delayedUpdateTextArea() {
-    root.clearTimeout(elEditor.__saving);
-    elEditor.__saving = root.setTimeout(updateTextArea, 200);
-  }
-
   /**
    * Allows the user to download `data` as a file which name is defined by
    * `filename`. The `mimetype` will help the browser to choose the associated
@@ -37944,7 +38166,6 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
   //////////////////////////////////////////////////////////////////////
 
   root.CodeMirror.commands.save = function (cm) {
-    updateTextArea();
     funs.save(cm, ["save"]);
   };
 
@@ -37984,12 +38205,10 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
           root.setTimeout(funs.load, 0, cm, ["load"]);
         },
         // "Ctrl-S": function (cm) {
-        //   updateTextArea();
         //   funs.save(cm, ["save"]);
         // },
         "Shift-Ctrl-S": function (cm) {
           funs["remove-trailing-spaces"](cm, ["remove-trailing-spaces"]);
-          updateTextArea();
           funs.save(cm, ["save"]);
         }
       },
@@ -38007,8 +38226,6 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
       theme: "rubyblue", // default "default"
       mode: "text"
     });
-
-    cmEditor.on("change", delayedUpdateTextArea);
 
     root.setTimeout(function () {
       try {
@@ -38036,6 +38253,8 @@ CodeMirror.registerHelper("lint", "yaml", function(text) {
       }
     });
   });
+
+  root.editor = cmEditor;
 
 }(this));
 
